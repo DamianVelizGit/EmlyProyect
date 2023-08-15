@@ -1,14 +1,15 @@
 import express from "express"
 import morgan from "morgan";
 
+const app = express();
+
 //Importacion del los archivos de rutas 
 import empleadosRoutes from "./routes/empleados.routes";
-const app = express();
 
 
 
 //Configuraciones
-app.set('port', 4000)
+app.set('port', 3000)
 
 
 //Middlewares
@@ -19,7 +20,9 @@ app.use(express.json());
 
 
 //Rutas
-app.use("/v1/empleados", empleadosRoutes);
-
+app.use('/v1',empleadosRoutes)
+app.use((req, res, next) =>{
+    res.status(404).json({message: 'Not found endopoint'});
+})
 
 export default app;

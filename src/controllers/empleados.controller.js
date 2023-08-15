@@ -1,13 +1,14 @@
-import { getConnection } from "../database/database.js";
+import { getConnection, pool } from "../database/database.js";
 
 //Controlador para obtener los empleados
 const getEmpleados = async (req, res) => {
     try {
         //Creamos la consulta para traer los empleados
-        const [rows] = await getConnection.query("SELECT * FROM empleados");
+        const [rows] = await pool.query("SELECT * FROM empleados");
         //Respondemos en formato json lo que encontramos en la BD
         res.json(rows);
     } catch (error) {
+        console.log(error);
         return res
             .status(500)
             .json({ message: "Algo salio mal al ver los empleados" });
