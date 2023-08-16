@@ -1,4 +1,4 @@
-import { getConnection, pool } from "../database/database.js";
+import { pool } from "../database/database.js";
 
 //Controlador para obtener los empleados
 const getEmpleados = async (req, res) => {
@@ -19,7 +19,7 @@ const getEmpleados = async (req, res) => {
 const getEmpleado = async (req, res) => {
     try {
         //Creamos la consulta para traer un empleado
-        const [rows] = await getConnection.query("SELECT * FROM empleados WHERE id = ?", [
+        const [rows] = await pool.query("SELECT * FROM empleados WHERE id = ?", [
             req.params.id,
         ]);
 
@@ -41,7 +41,7 @@ const createEmpleados = async (req, res) => {
         const { name, salary } = req.body;
 
         //Creamos la consulta para insertar el empleado en la BD
-        const [rows] = await getConnection.query(
+        const [rows] = await pool.query(
             "INSERT INTO empleados (name,salary) values(?,?)",
             [name, salary]
         );
@@ -62,7 +62,7 @@ const createEmpleados = async (req, res) => {
 const deleteEmpleados = async (req, res) => {
     try {
         //Creamos la consulta para eliminar un empleado en especifico
-        const [result] = await getConnection.query("DELETE FROM empleados WHERE id = ?", [
+        const [result] = await pool.query("DELETE FROM empleados WHERE id = ?", [
             req.params.id,
         ]);
 
@@ -87,7 +87,7 @@ const updateEmpleados = async (req, res) => {
         const { name, salary } = req.body;
 
         //Creamos la consulta para actualizar los datos de empleado
-        const [result] = await getConnection.query(
+        const [result] = await pool.query(
             "UPDATE empleados SET name = IFNULL(?,name), salary = IFNULL(?,salary) WHERE id = ?",
             [name, salary, id]
         );
@@ -97,7 +97,7 @@ const updateEmpleados = async (req, res) => {
             return res.status(404).json({ message: "Empleado no encontrado" });
         }
         //Respondemos con los datos actualizados del empleado
-        const [rows] = await getConnection.query("SELECT * FROM empleados WHERE id = ?", [
+        const [rows] = await pool.query("SELECT * FROM empleados WHERE id = ?", [
             id,
         ]);
 

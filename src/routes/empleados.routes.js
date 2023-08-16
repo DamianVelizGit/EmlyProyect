@@ -14,7 +14,7 @@ router.get('/empleados/:id', empleadosController.getEmpleado )
 //Ruta post para crear un empleado
 router.post('/empleados', empleadosController.createEmpleados)
 
-//Ruta put para actualizar un empleado
+//Ruta patch para actualizar un empleado
 router.patch('/empleados/:id', empleadosController.updateEmpleados)
 
 //Ruta delete para borrar un empleado
