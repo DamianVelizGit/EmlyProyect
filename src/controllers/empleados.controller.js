@@ -1,4 +1,5 @@
 import { pool } from "../database/database.js";
+import jwt from "../utils/jwtToken.js"
 
 //Controlador para obtener los empleados
 const getEmpleados = async (req, res) => {
@@ -18,16 +19,8 @@ const getEmpleados = async (req, res) => {
 //Controlador para obtener un empleado
 const getEmpleado = async (req, res) => {
     try {
-        //Creamos la consulta para traer un empleado
-        const [rows] = await pool.query("SELECT * FROM empleados WHERE id = ?", [
-            req.params.id,
-        ]);
+        res.json(req.user)
 
-        //Validamos si el empleado existe en la BD
-        if (rows.length <= 0) {
-            return res.status(404).json({ message: "Empleado no encontrado" });
-        }
-        res.json(rows[0]);
     } catch (error) {
         return res
             .status(500)
@@ -41,20 +34,30 @@ const createEmpleados = async (req, res) => {
         const { name, salary } = req.body;
 
         //Creamos la consulta para insertar el empleado en la BD
+        const rol = await pool.query(
+            "SELECT *  FROM rol WHERE role = ?", "admin");
         const [rows] = await pool.query(
-            "INSERT INTO empleados (name,salary) values(?,?)",
-            [name, salary]
+            "INSERT INTO empleados (name,salary,idRol_fk) values(?,?,?)",
+            [name, salary, rol[0][0].id]
         );
         //Enviamos la respuesta en el formato JSON
+        const token = jwt(rows.insertId, rol[0][0].role)
+
+        await pool.query(
+            "INSERT INTO token (nameToken, idUser_fk) values(?,?)",
+            [token, rows.insertId]
+        );
+
         res.send({
             id: rows.insertId,
             name,
             salary,
+            token
         });
     } catch (error) {
         return res
             .status(500)
-            .json({ message: "Algo salio mal al crear un empleado" });
+            .json({ message: "Algo salio mal al crear un empleado", error });
     }
 };
 
@@ -108,6 +111,11 @@ const updateEmpleados = async (req, res) => {
             .json({ message: "Algo salio mal al actualizar la informacion" });
     }
 };
+
+
+
+
+
 
 
 export const methods = {
