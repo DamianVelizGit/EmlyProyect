@@ -19,7 +19,11 @@ const getEmpleados = async (req, res) => {
 //Controlador para obtener un empleado
 const getEmpleado = async (req, res) => {
     try {
-        res.json(req.user)
+
+        //Creamos la consulta para
+        const [rows] = await pool.query(
+            "SELECT *  FROM empleados WHERE id = ?", req.params.id);
+        res.json(rows[0]);
 
     } catch (error) {
         return res

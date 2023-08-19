@@ -26,7 +26,7 @@ router.get('/empleados/:id', empleadosController.getEmpleado )
 router.post('/empleados', validation(empleadosSchema) ,empleadosController.createEmpleados)
 
 //Ruta patch para actualizar un empleado
-router.patch('/empleados/:id', empleadosController.updateEmpleados)
+router.patch('/empleados/:id', authentification, empleadosController.updateEmpleados)
 
 //Ruta delete para borrar un empleado
 router.delete('/empleados/:id', empleadosController.deleteEmpleados)
