@@ -39,7 +39,7 @@ const createEmpleados = async (req, res) => {
 
         //Creamos la consulta para insertar el empleado en la BD
         const rol = await pool.query(
-            "SELECT *  FROM rol WHERE role = ?", "admin");
+            "SELECT * FROM rol WHERE role = ?", "user");
         const [rows] = await pool.query(
             "INSERT INTO empleados (name,salary,idRol_fk) values(?,?,?)",
             [name, salary, rol[0][0].id]
@@ -57,7 +57,8 @@ const createEmpleados = async (req, res) => {
             name,
             salary,
             token
-        });
+        })
+        // res.status(201).json({ message: 'Empleado creado y token generado', token });
     } catch (error) {
         return res
             .status(500)
