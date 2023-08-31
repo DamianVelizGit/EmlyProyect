@@ -18,9 +18,8 @@ const loginUser = async (req, res) => {
             return res.status(401).send("Credenciales Invalidas!");
         }
 
-        const rol = await pool.query(
+        const [rol] = await pool.query(
             "SELECT * FROM rol WHERE ID_rol = ?", rows[0].Rol_ID_fk);
-
 
         const token = jwt(rows[0].ID_usuario, rol[0].nombre_rol)
 

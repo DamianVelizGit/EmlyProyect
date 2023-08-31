@@ -1,11 +1,10 @@
 import { Router } from "express";
 import  authentification from '../Middlewares/authentication.js'
 import validation from '../Middlewares/joiValidation.js';
+import rolValidator from '../Middlewares/rolValidation.js';
 
 //Importamos los controllers para nuestras rutas
 import { methods as adminController } from './../controllers/admin.controller.js';
-
-import { methods as userController } from './../controllers/user.controller.js';
 
 import { methods as logoutController } from './../controllers/logout.controller.js';
 
@@ -13,13 +12,13 @@ const router = Router();
 
 
 //Ruta get para obtener los usuarios
-router.get('/list/users',authentification, userController.getUsers)
+router.get('/list/users', authentification, rolValidator("administrator"), adminController.getUsers)
 
 //Ruta get para obtener un usuario por ID
-router.get('/list/user/:id',authentification, userController.getUser)
+router.get('/list/user/:id', authentification,rolValidator("administrator"), adminController.getUser)
 
 //Ruta delete para borrar un usuario
-router.delete('/delete/:id',authentification, userController.DeleteUser)
+router.delete('/delete/:id', authentification,rolValidator("administrator"), adminController.DeleteUser)
 
 
 //Ruta get para obtener los administradores
@@ -33,12 +32,6 @@ router.post('/new')
 
 //Ruta get para ver perfil de un administrador
 router.get('/view/profile',authentification)
-
-//Ruta post para inicio de sesion de administrador
-router.post('/login')
-
-//Ruta post para cierre de sesion de administrador
-router.post('/logout',authentification,logoutController.logout)
 
 //Ruta patch para actualizar un administrador
 router.patch('/update',authentification)

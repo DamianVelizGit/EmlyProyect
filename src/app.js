@@ -11,7 +11,17 @@ import productoctRoutes from "./routes/productos.routes";
 import userRoutes from "./routes/user.routes";
 
 //Configuraciones
-app.set('port', 3000)
+app.set('port', 3001)
+
+//Configuración de cors
+app.use((req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Credentials', true);
+  res.setHeader('Access-Control-Allow-Methods', 'GET,PATCH,POST,DELETE');
+  res.setHeader("Access-Control-Allow-Headers", "Origin, Content-Type, Authorization");
+  next();
+})
+
 
 
 //Middlewares
@@ -25,7 +35,7 @@ app.use(express.json());
 app.use('/v1',empleadosRoutes)
 app.use('/v1/administrators', administradorRoutes); 
 app.use('/v1/user', userRoutes); 
-app.use('/v1/logout', logoutRoutes); 
+app.use('/v1', logoutRoutes); 
 app.use('/v1/product', productoctRoutes); 
 
 

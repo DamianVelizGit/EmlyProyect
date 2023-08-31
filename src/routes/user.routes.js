@@ -21,9 +21,6 @@ router.post('/new', userController.createUser)
 //Ruta post para inicio de sesion de usuario
 router.post('/login', loginController.loginUser)
 
-//Ruta post para cierre de sesion de usuario
-router.post('/logout', authentification, logoutController.logout)
-
 //Ruta patch para actualizar un usuario
 router.patch('/update', authentification)
 
