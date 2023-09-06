@@ -80,10 +80,26 @@ const upload = async (req, res) => {
 }
 
 
+const viewProfile = async (req, res) => {
+    try {
+
+        const { user } = req;
+
+        res.status(200).send(user);
+
+    } catch (error) {
+        return res
+            .status(500)
+            .json({ message: "Algo salio mal " });
+    }
+}
+
+
 
 
 
 export const methods = {
     createUser,
-    upload
+    upload,
+    viewProfile
 };

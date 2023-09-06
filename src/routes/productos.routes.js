@@ -6,7 +6,10 @@ import { methods as productController } from './../controllers/productos.control
 const router = Router();
 
 //Ruta get para obtener todos los productos
-router.get('/list/products' )
+router.get('/list/products', productController.getProducts )
+
+//Ruta get para obtener todas las categorias
+router.get('/list/category', productController.getCategory )
 
 //Ruta get para obtener un producto por ID
 router.get('/list/product/:id')

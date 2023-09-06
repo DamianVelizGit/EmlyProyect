@@ -13,7 +13,7 @@ import { methods as logoutController } from './../controllers/logout.controller.
 const router = Router();
 
 //Ruta get para ver perfil de un usuario
-router.get('/view/profile', authentification)
+router.get('/view/profile', authentification, userController.viewProfile)
 
 //Ruta post para crear un usuario
 router.post('/new', userController.createUser)

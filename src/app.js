@@ -1,5 +1,8 @@
 import express from "express"
 import morgan from "morgan";
+import {SECRET} from './config'
+const session = require('express-session');
+import {sessionStore} from './database/database.js'
 
 const app = express();
 
@@ -22,6 +25,14 @@ app.use((req, res, next) => {
   next();
 })
 
+//Configuración para el uso de sesiones
+     app.use(session({
+        key: "cookieUser",
+        secret: SECRET,
+        store: sessionStore,
+        resave: false,
+        saveUninitialized: false
+    }))
 
 
 //Middlewares

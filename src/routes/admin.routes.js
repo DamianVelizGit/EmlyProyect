@@ -12,7 +12,8 @@ const router = Router();
 
 
 //Ruta get para obtener los usuarios
-router.get('/list/users', authentification, rolValidator("administrator"), adminController.getUsers)
+router.get('/list/users', authentification, adminController.getUsers)
+//rolValidator("administrator"),
 
 //Ruta get para obtener un usuario por ID
 router.get('/list/user/:id', authentification,rolValidator("administrator"), adminController.getUser)
