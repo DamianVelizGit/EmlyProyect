@@ -2,7 +2,7 @@ import { pool } from "../database/database.js";
 
 
 //Controlador para obtener los empleados
-const getUsers = async (req, res) => {
+const getUsersDeprecate = async (req, res) => {
     try {
         //Creamos la consulta para traer los empleados
         const [rows] = await pool.query("SELECT * FROM usuarios");
@@ -16,20 +16,79 @@ const getUsers = async (req, res) => {
     }
 };
 
+let cachedUsers = null;
+const cacheTimeout = 3600 * 1000; // Caché válida durante 1 hora (en milisegundos)
+
+const getUsers = async (req, res) => {
+    try {
+        // Si los usuarios están en caché y no ha expirado, devuelve la caché
+        if (cachedUsers !== null && Date.now() - cachedUsers.timestamp < cacheTimeout) {
+            console.log('Obteniendo usuarios desde la caché...');
+            return res.json(cachedUsers.data);
+        }
+
+        // Realiza la consulta a la base de datos seleccionando solo los campos necesarios
+        const [rows] = await pool.query("SELECT * FROM usuarios");
+
+        // Almacena los usuarios en la caché junto con la marca de tiempo
+        cachedUsers = {
+            data: rows,
+            timestamp: Date.now(),
+        };
+
+        // Respondemos en formato JSON con los datos de la base de datos
+        res.json(cachedUsers.data);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: "Error al obtener los usuarios" });
+    }
+};
+
+
 
 //Controlador para obtener un empleado
+// const getUserDeprecate = async (req, res) => {
+//     try {
+
+//         //Creamos la consulta para
+//         const [rows] = await pool.query(
+//             "SELECT * FROM usuarios WHERE ID_usuario = ?", req.params.id);
+//         res.json(rows[0]);
+
+//     } catch (error) {
+//         return res
+//             .status(500)
+//             .json({ message: "Algo salio mal al buscar tu usuarios" });
+//     }
+// };
+
+
 const getUser = async (req, res) => {
     try {
+        const userId = req.params.id;
 
-        //Creamos la consulta para
+        // Verifica si el ID de usuario es un número entero válido
+        if (!Number.isInteger(+userId)) {
+            return res.status(400).json({ message: "ID de usuario no válido" });
+        }
+
+        // Realiza la consulta a la base de datos utilizando un parámetro
         const [rows] = await pool.query(
-            "SELECT * FROM usuarios WHERE ID_usuario = ?", req.params.id);
-        res.json(rows[0]);
+            "SELECT * FROM usuarios WHERE ID_usuario = ?",
+            [userId]
+        );
 
+        // Verifica si se encontró un usuario con el ID especificado
+        if (rows.length === 0) {
+            return res.status(404).json({ message: "Usuario no encontrado" });
+        }
+
+        // Devuelve los campos en formato JSON
+        const user = rows[0];
+        res.json(user);
     } catch (error) {
-        return res
-            .status(500)
-            .json({ message: "Algo salio mal al buscar tu usuarios" });
+        console.error(error);
+        return res.status(500).json({ message: "Error al buscar el usuario" });
     }
 };
 

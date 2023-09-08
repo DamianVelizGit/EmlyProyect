@@ -29,6 +29,7 @@ app.use((req, res, next) => {
      app.use(session({
         key: "cookieUser",
         secret: SECRET,
+        maxAge: 24 * 60 * 60 * 1000,
         store: sessionStore,
         resave: false,
         saveUninitialized: false
