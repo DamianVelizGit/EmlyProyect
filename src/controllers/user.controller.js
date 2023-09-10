@@ -199,29 +199,6 @@ const updateUser = async (req, res) => {
 };
 
 
-const deleteUser = async (req, res) => {
-    try {
-        const { id } = req.params;
-
-        const query = "UPDATE usuarios SET Estado_ID_fk = ? WHERE ID_usuario = ?";
-        const values = ["inactivo", id];
-
-        const [result] = await pool.query(query, values);
-
-        if (result.affectedRows === 0) {
-            return res.status(404).send({ status: "ERROR", message: "Usuario no encontrado" });
-        }
-
-        res.status(200).send({ status: "SUCCESS", message: "Usuario eliminado correctamente" });
-    } catch (error) {
-        return res.status(500).send({ status: "ERROR", message: "Algo salió mal al eliminar el usuario" });
-    }
-};
-
-
-
-
-
 const upload = async (req, res) => {
     try {
 
@@ -246,13 +223,9 @@ const viewProfile = async (req, res) => {
 }
 
 
-
-
-
 export const methods = {
     createUser,
     upload,
     viewProfile,
-    updateUser,
-    deleteUser
+    updateUser
 };
