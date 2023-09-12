@@ -36,8 +36,10 @@ router.post('/new', authentification,rolValidator("administrator"), adminControl
 //Ruta get para ver perfil de un administrador
 router.get('/view/profile', authentification)
 
-//Ruta patch para actualizar un administrador
-router.patch('/update', authentification)
+
+//Ruta patch para actualizar un usuario
+router.patch('/update/:id', authentification, adminController.updateAdministrator)
+
 
 //Ruta delete para borrar un administrador
 router.delete('/deleteAd/:id', authentification,rolValidator("administrator"), adminController.DeleteAdministrator)

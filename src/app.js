@@ -82,7 +82,7 @@ app.use('/v1/user', userRoutes);
 app.use('/v1', logoutRoutes); 
 app.use('/v1/product', productoctRoutes); 
 app.use('/v1/imagen', imageRoutes);
-app.use('/v1/proveedor', proveedorRoutes);
+app.use('/v1/provider', proveedorRoutes);
 
 
 

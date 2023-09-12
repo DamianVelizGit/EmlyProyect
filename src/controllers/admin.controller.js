@@ -11,7 +11,7 @@ const cacheTimeout = 1800 * 1000; // Caché válida durante 30 minutos (en milis
 setInterval(() => {
     cachedAdmin = null;
     cachedUsers = null;
-}, cacheTimeout); // Expira la caché después de 1 hora
+}, cacheTimeout); // Expira la caché
 
 //Funcion para limpiar los datos entrantes
 function sanitize(input) {
@@ -34,8 +34,7 @@ const getUsers = async (req, res) => {
             return res.status(200).send(cachedUsers.data);
         }
 
-        // Realiza la consulta a la base de datos seleccionando solo los campos necesarios
-        const [rows] = await pool.query("SELECT * FROM usuarios WHERE Rol_ID_fk NOT IN (?)", [excludedRoles]);
+        const [rows] = await pool.query("SELECT * FROM usuarios WHERE Rol_ID_fk NOT IN (?) AND Estado_ID_fk = ?", [excludedRoles, 1]);
 
         // Almacena los usuarios en la caché junto con la marca de tiempo
         cachedUsers = {
@@ -169,7 +168,7 @@ const getAdministrators = async (req, res) => {
         }
 
         // Realiza la consulta a la base de datos seleccionando solo los campos necesarios
-        const [rows] = await pool.query("SELECT * FROM usuarios WHERE Rol_ID_fk NOT IN (?)", [excludedRoles]);
+        const [rows] = await pool.query("SELECT * FROM usuarios WHERE Rol_ID_fk NOT IN (?) AND Estado_ID_fk = ?", [excludedRoles, 1]);
 
         // Almacena los administradores en la caché junto con la marca de tiempo
         cachedAdmin = {
@@ -387,8 +386,34 @@ const createAdministrator = async (req, res) => {
     }
 };
 
+//--------------------ACTUALIZAR ADMINISTRADOR--------------------*/
+const updateAdministrator = async (req, res) => {
+    try {
+        const adminId = req.params.id; // Obtén el ID  de los parámetros de la URL
+        const updatedFields = req.body; // Obtén los campos actualizados del cuerpo de la solicitud
 
 
+        // Verifica que el ID  sea un número entero válido
+        if (!Number.isInteger(+adminId)) {
+            return res.status(400).send({ status: "ERROR", message: "ID del administrador no es válido." });
+        }
+
+        // Realiza la actualización en la base de datos
+        const updateQuery = "UPDATE usuarios SET ? WHERE ID_usuario = ?";
+        const [result] = await pool.query(updateQuery, [updatedFields, adminId]);
+
+        if (result.affectedRows === 1) {
+            // Si la actualización fue exitosa, responde con un código 200 (OK)
+            return res.status(200).send({ status: "SUCCESS", message: "Adminsitrador actualizado exitosamente." });
+        } else {
+            // Si la actualización no fue exitosa , responde con un código 404 (Not Found)
+            return res.status(404).send({ status: "ERROR", message: "Administrador no encontrado." });
+        }
+    } catch (error) {
+        console.error(error);
+        return res.status(500).send({ status: "FAILED", message: "Algo salió mal al actualizar el Administrador." });
+    }
+};
 
 
 
@@ -398,6 +423,7 @@ export const methods = {
     DeleteUser,
     getAdministrators,
     getAdministrator,
+    updateAdministrator,
     DeleteAdministrator,
     createAdministrator
 };
