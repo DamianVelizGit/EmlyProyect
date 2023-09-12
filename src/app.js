@@ -9,13 +9,12 @@ const session = require('express-session');
 const app = express();
 
 //Importacion del los archivos de rutas 
-import empleadosRoutes from "./routes/empleados.routes";
 import administradorRoutes from "./routes/admin.routes";
 import logoutRoutes from "./routes/logout.routes";
 import productoctRoutes from "./routes/productos.routes";
 import userRoutes from "./routes/user.routes";
 import imageRoutes  from "./routes/uploadImage.routes"
-
+import proveedorRoutes from "./routes/proveedor.routes"
 
 
 //Configuraciones
@@ -41,20 +40,6 @@ app.use((req, res, next) => {
     }))
 
 
-
-//Multer para subida de imagenes
-// const storage = multer.diskStorage({
-
-//   destination: (req,file, cb) => {
-//     cb(null,'uploads')
-// },
-//   filename: (req,file, cb) => {
-//     cb(null,file.originalname)
-//   }
-
-//   });
-
-// const upload = multer({storage})
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -92,12 +77,12 @@ app.use(express.urlencoded({ extended: true }));
 
 
 //Rutas
-app.use('/v1',empleadosRoutes)
 app.use('/v1/administrators', administradorRoutes); 
 app.use('/v1/user', userRoutes); 
 app.use('/v1', logoutRoutes); 
 app.use('/v1/product', productoctRoutes); 
 app.use('/v1/imagen', imageRoutes);
+app.use('/v1/proveedor', proveedorRoutes);
 
 
 

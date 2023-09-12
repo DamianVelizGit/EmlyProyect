@@ -13,7 +13,7 @@ router.post('/user/logout',authentification, logoutController.logout)
 router.post('/user/logoutAll')
 
 //Ruta post con el middleware de autenticación para cerrar sesión del administrador
-router.post('/administrator/logout')
+router.post('/administrator/logout',authentification, logoutController.logout)
 
 //Ruta post con el middleware de autenticación para cerrar todas las sesiones del administrador
 router.post('/administrator/logoutAll')
