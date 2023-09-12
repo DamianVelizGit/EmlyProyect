@@ -5,7 +5,13 @@ import jwt from "../utils/jwtToken.js";
 
 let cachedAdmin = null;
 let cachedUsers = null;
-const cacheTimeout = 3600 * 1000; // Caché válida durante 1 hora (en milisegundos)
+const cacheTimeout = 1800 * 1000; // Caché válida durante 30 minutos (en milisegundos)
+
+// Limpia la caché  después de una hora
+setInterval(() => {
+    cachedAdmin = null;
+    cachedUsers = null;
+}, cacheTimeout); // Expira la caché después de 1 hora
 
 //Funcion para limpiar los datos entrantes
 function sanitize(input) {

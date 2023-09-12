@@ -1,8 +1,10 @@
 import express from "express"
 import morgan from "morgan";
 import {SECRET} from './config'
-const session = require('express-session');
 import {sessionStore} from './database/database.js'
+const multer = require('multer') 
+const session = require('express-session');
+
 
 const app = express();
 
@@ -12,6 +14,9 @@ import administradorRoutes from "./routes/admin.routes";
 import logoutRoutes from "./routes/logout.routes";
 import productoctRoutes from "./routes/productos.routes";
 import userRoutes from "./routes/user.routes";
+import imageRoutes  from "./routes/uploadImage.routes"
+
+
 
 //Configuraciones
 app.set('port', 3001)
@@ -36,11 +41,54 @@ app.use((req, res, next) => {
     }))
 
 
+
+//Multer para subida de imagenes
+// const storage = multer.diskStorage({
+
+//   destination: (req,file, cb) => {
+//     cb(null,'uploads')
+// },
+//   filename: (req,file, cb) => {
+//     cb(null,file.originalname)
+//   }
+
+//   });
+
+// const upload = multer({storage})
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/'); // Directorio donde se guardarán las imágenes
+  },
+  filename: (req, file, cb) => {
+    // Renombra el archivo para evitar colisiones de nombres
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, file.fieldname + '-' + uniqueSuffix + '.' + file.originalname.split('.').pop());
+  },
+});
+
+const upload = multer({
+  storage: storage,
+  limits: {
+    fileSize: 1024 * 1024, // Tamaño máximo de 1MB
+  },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Solo se permiten imágenes.'));
+    }
+  },
+});
+
 //Middlewares
 //Usamos morgan para ver las salidas http en consola
 app.use(morgan('dev'));
 //Se convertiran los datos en formato JSON 
 app.use(express.json());
+
+app.use(express.urlencoded({ extended: true }));
+
 
 
 //Rutas
@@ -49,6 +97,8 @@ app.use('/v1/administrators', administradorRoutes);
 app.use('/v1/user', userRoutes); 
 app.use('/v1', logoutRoutes); 
 app.use('/v1/product', productoctRoutes); 
+app.use('/v1/imagen', imageRoutes);
+
 
 
 app.use((req, res, next) =>{

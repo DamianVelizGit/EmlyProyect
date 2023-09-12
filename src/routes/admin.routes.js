@@ -1,7 +1,7 @@
 import { Router } from "express";
 import authentification from '../Middlewares/authentication.js'
-import validation from '../Middlewares/joiValidation.js';
 import rolValidator from '../Middlewares/rolValidation.js';
+import validation from '../Middlewares/joiValidation.js';
 
 //Importamos los controllers para nuestras rutas
 import { methods as adminController } from './../controllers/admin.controller.js';

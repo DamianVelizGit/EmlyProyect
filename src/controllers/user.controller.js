@@ -2,13 +2,13 @@ import { pool } from "../database/database.js";
 import { encrypt } from '../utils/handlehash.js';
 import jwt from "../utils/jwtToken.js";
 
-
-
+    
 function sanitize(input) {
     // Remover caracteres no deseados o peligrosos utilizando una expresión regular
     return input.replace(/[\$'";]/g, ''); // Elimina caracteres como '$', "'", '"', ';'
 }
 
+//--------------------CREAR USUARIOS--------------------*/
 
 const createUser = async (req, res) => {
     try {
@@ -106,96 +106,34 @@ const createUser = async (req, res) => {
     }
 };
 
-
-
-
-//Controlador para crear los usuario
-// const createUserdeprec = async (req, res) => {
-//     try {
-
-//         const { nombre_usuario, apellido_usuario, correo_electronico, contraseña_usuario, telefono_usuario, nit_usuario } = req.body;
-
-//         const passencryp = await encrypt(contraseña_usuario)
-
-//         const [rol] = await pool.query(
-//             "SELECT * FROM rol WHERE nombre_rol = ?", "user");
-
-//         const [estado] = await pool.query(
-//             "SELECT * FROM estado WHERE Nom_estado = ?", "activo");
-
-//         const [rows] = await pool.query(
-//             `INSERT INTO usuarios ( 
-//                 nombre_usuario, 
-//                 apellido_usuario, 
-//                 correo_electronico, 
-//                 contraseña_usuario, 
-//                 telefono_usuario, 
-//                 nit_usuario,
-//                 Estado_ID_fk,
-//                 Rol_ID_fk) 
-//                 values(?,?,?,?,?,?,?,?)`,
-//             [
-//                 nombre_usuario,
-//                 apellido_usuario,
-//                 correo_electronico,
-//                 passencryp,
-//                 telefono_usuario,
-//                 nit_usuario,
-//                 estado[0].ID_estado,
-//                 rol[0].ID_rol
-//             ]
-//         );
-
-
-//         const token = jwt(rows.insertId, rol[0].nombre_rol)
-
-//         await pool.query(
-//             "INSERT INTO token (nameToken, Usuarios_ID_fk) values(?,?)",
-//             [token, rows.insertId]
-//         );
-
-
-//         res.status(201).send({
-//             id: rows.insertId,
-//             nombre_usuario,
-//             apellido_usuario,
-//             correo_electronico,
-//             passencryp,
-//             telefono_usuario,
-//             nit_usuario,
-//             token
-//         })
-//     } catch (error) {
-//         return res
-//             .status(500).send({ status: "ERROR", message: "Algo salio mal al crear un usuario" })
-//     }
-// };
-
-
+//--------------------ACTUALIZAR USUARIOS--------------------*/
 
 const updateUser = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { nombre_usuario, apellido_usuario, correo_electronico, telefono_usuario, nit_usuario } = req.body;
+  try {
+    const userId = req.params.id; // Obtén el ID  de los parámetros de la URL
+    const updatedFields = req.body; // Obtén los campos actualizados del cuerpo de la solicitud
 
-        const query =
-            `
-            UPDATE usuarios
-            SET nombre_usuario=?, apellido_usuario=?, correo_electronico=?, telefono_usuario=?, nit_usuario=?
-            WHERE ID_usuario=?
-        `;
-        const values = [nombre_usuario, apellido_usuario, correo_electronico, telefono_usuario, nit_usuario, id];
 
-        const [result] = await pool.query(query, values);
-
-        if (result.affectedRows === 0) {
-            return res.status(404).send({ status: "ERROR", message: "Usuario no encontrado" });
-        }
-
-        res.status(200).send({ status: "SUCCESS", message: "Usuario actualizado correctamente" });
-    } catch (error) {
-        return res.status(500).send({ status: "ERROR", message: "Algo salió mal al actualizar el usuario" });
+    // Verifica que el ID  sea un número entero válido
+    if (!Number.isInteger(+userId)) {
+      return res.status(400).send({ status: "ERROR", message: "ID de usuario no es válido." });
     }
+
+    // Realiza la actualización en la base de datos
+    const updateQuery = "UPDATE usuarios SET ? WHERE ID_usuario = ?";
+    const [result] = await pool.query(updateQuery, [updatedFields, userId]);
+
+    if (result.affectedRows === 1) {
+      // Si la actualización fue exitosa, responde con un código 200 (OK)
+      return res.status(200).send({ status: "SUCCESS", message: "Usuario actualizado exitosamente." });
+    } else {
+      // Si la actualización no fue exitosa , responde con un código 404 (Not Found)
+      return res.status(404).send({ status: "ERROR", message: "Usuario no encontrado." });
+    }
+  } catch (error) {
+    console.error(error);
+    return res.status(500).send({ status: "FAILED", message: "Algo salió mal al actualizar el usuario." });
+  }
 };
 
 
@@ -209,6 +147,7 @@ const upload = async (req, res) => {
 }
 
 
+//--------------------VER PERFIL--------------------*/
 const viewProfile = async (req, res) => {
     try {
 

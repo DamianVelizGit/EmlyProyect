@@ -22,7 +22,7 @@ router.post('/new', userController.createUser)
 router.post('/login', loginController.loginUser)
 
 //Ruta patch para actualizar un usuario
-router.patch('/update', authentification)
+router.patch('/update/:id', authentification, userController.updateUser)
 
 
 router.post('/upload', upload.single("Perfil_Imagen"), (err, req, res, next) => {

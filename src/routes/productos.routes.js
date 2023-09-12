@@ -1,27 +1,37 @@
 import { Router } from "express";
+import authentification from '../Middlewares/authentication.js'
+import rolValidator from '../Middlewares/rolValidation.js';
 
 //Importamos los controllers para nuestras rutas
 import { methods as productController } from './../controllers/productos.controller.js';
 
 const router = Router();
 
-//Ruta get para obtener todos los productos
-router.get('/list/products', productController.getProducts )
 
 //Ruta get para obtener todas las categorias
-router.get('/list/category', productController.getCategory )
+router.get('/list/category', productController.getCategory)
 
-//Ruta get para obtener un producto por ID
-router.get('/list/product/:id')
+//Ruta post para crear las categorias
+router.post('/new/category', authentification, rolValidator("administrator"), productController.createCategory)
+
+router.patch('/update/category/:id', authentification, rolValidator("administrator"), productController.updateCategory)
+
+//Ruta delete para borrar una categoria
+router.delete('/delete/category/:id', authentification, rolValidator("administrator"), productController.CategoryDeleted)
+
+//Ruta get para obtener todos los productos
+router.get('/list/products', productController.getProducts)
+
 
 //Ruta post para crear un producto
-router.post('/new/product')
+router.post('/new/product', authentification, rolValidator("administrator"), productController.createProduct)
 
-//Ruta patch para actualizar un producto
-router.patch('/update/product/:id')
 
-//Ruta delete para borrar un producto
-router.delete('/delete/product/:id')
+router.patch('/update/product/:id', authentification, rolValidator("administrator"), productController.updateProduct)
+
+
+router.delete('/delete/product/:id', authentification, rolValidator("administrator"), productController.deleteProduct)
+
 
 
 export default router
