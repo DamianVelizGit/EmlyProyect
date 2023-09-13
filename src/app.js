@@ -15,6 +15,7 @@ import productoctRoutes from "./routes/productos.routes";
 import userRoutes from "./routes/user.routes";
 import imageRoutes  from "./routes/uploadImage.routes"
 import proveedorRoutes from "./routes/proveedor.routes"
+import shoppingCartRoutes from "./routes/carrito.routes"
 
 
 //Configuraciones
@@ -83,6 +84,7 @@ app.use('/v1', logoutRoutes);
 app.use('/v1/product', productoctRoutes); 
 app.use('/v1/imagen', imageRoutes);
 app.use('/v1/provider', proveedorRoutes);
+app.use('/v1/cart', shoppingCartRoutes);
 
 
 
