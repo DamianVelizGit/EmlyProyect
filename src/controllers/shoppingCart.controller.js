@@ -2,6 +2,7 @@ import { pool } from "../database/database.js";
 import { encrypt } from '../utils/handlehash.js';
 import jwt from "../utils/jwtToken.js";
 
+
 const addtoCart = async (req, res) => {
     try {
         // Validar que los parámetros sean números y que id_usuario esté presente
@@ -19,7 +20,7 @@ const addtoCart = async (req, res) => {
         try {
             // Verificar si el usuario ya tiene un carrito activo
             let id_carrito = null;
-            const [activeCart] = await connection.query('SELECT * FROM carritos WHERE id_usuario_fk = ? AND estado_carrito_fk = ?', [id_usuario, 1]); // Suponiendo que el estado activo tiene ID 1
+            const [activeCart] = await connection.query('SELECT * FROM carritos WHERE id_usuario_fk = ? AND estado_carrito_fk = ?', [id_usuario, 1]); // activo tiene ID 1
 
             if (activeCart.length === 0) {
                 // Si el usuario no tiene un carrito activo, crea uno con estado activo
@@ -58,7 +59,7 @@ const addtoCart = async (req, res) => {
                     return res.status(400).send({ status: 'BAD_REQUEST', message: 'La cantidad solicitada excede el stock disponible.' });
                 }
 
-                await connection.query('UPDATE productos_en_carrito SET cantidad = ? WHERE id_carrito = ? AND id_producto = ?', [newCantidad, id_carrito, id_producto]);
+                await connection.query('UPDATE productos_en_carrito SET cantidad = ?, precio_unitario= ?  WHERE id_carrito = ? AND id_producto = ?', [newCantidad, precio_unitario, id_carrito, id_producto]);
             }
 
             // Confirmar la transacción
@@ -86,13 +87,14 @@ const ViewToCart = async (req, res) => {
 
         // Consulta para obtener los productos en el carrito del usuario
         const query = `
-            SELECT pec.id_producto_carrito, p.nombre_producto, pec.cantidad, pec.precio_unitario
+            SELECT pec.id_producto_carrito,p.id_producto, p.nombre_producto, pec.cantidad, p.precio_unitario_producto
             FROM productos_en_carrito AS pec
             INNER JOIN productos AS p ON pec.id_producto = p.id_producto
             WHERE pec.id_carrito IN (
                 SELECT id_carrito
                 FROM carritos
                 WHERE id_usuario_fk = ?
+                AND estado_carrito_fk = 1
             )
         `;
 
@@ -183,16 +185,19 @@ const DeleteCartItem = async (req, res) => {
         await connection.beginTransaction();
 
         try {
-            // Verificar si el producto está en el carrito del usuario
-            const [existingProduct] = await connection.query('SELECT pec.id_producto_carrito FROM productos_en_carrito AS pec INNER JOIN carritos AS c ON pec.id_carrito = c.id_carrito WHERE c.id_usuario_fk = ? AND pec.id_producto = ?', [id_usuario, id_producto]);
+            // Verificar si el producto está en el carrito del usuario y si el carrito está activo (estado 1)
+            const [cartInfo] = await connection.query('SELECT pec.id_producto_carrito FROM productos_en_carrito AS pec INNER JOIN carritos AS c ON pec.id_carrito = c.id_carrito WHERE c.id_usuario_fk = ? AND pec.id_producto = ? AND c.estado_carrito_fk = 1', [id_usuario, id_producto]);
 
-            if (existingProduct.length === 0) {
-                // Si el producto no está en el carrito, devolver un error
-                return res.status(404).send({ status: 'NOT_FOUND', message: 'Producto no encontrado en el carrito.' });
+            if (cartInfo.length === 0) {
+                // Si el producto no está en el carrito activo, devolver un error
+                return res.status(404).send({ status: 'NOT_FOUND', message: 'Producto no encontrado en el carrito activo.' });
             }
-console.log(existingProduct[0].id_producto_carrito);
+
+            // Obtener el id_producto_carrito del producto en el carrito
+            const id_producto_carrito = cartInfo[0].id_producto_carrito;
+            console.log(id_producto_carrito);
             // Eliminar el producto del carrito
-            await connection.query('DELETE FROM productos_en_carrito WHERE id_producto_carrito = ?', [existingProduct[0].id_producto_carrito]);
+            await connection.query('DELETE FROM productos_en_carrito WHERE id_producto_carrito = ?', [id_producto_carrito]);
 
             // Confirmar la transacción
             await connection.commit();
@@ -213,11 +218,42 @@ console.log(existingProduct[0].id_producto_carrito);
     }
 };
 
+const getTotalCart = async (req, res) => {
+  try {
+    const id_usuario = req.user[0].ID_usuario; // Obtén el ID de usuario autenticado desde el token
+
+    // Verificar que el usuario esté autenticado
+    if (!id_usuario) {
+      return res.status(401).send({ status: 'UNAUTHORIZED', message: 'Usuario no autenticado.' });
+    }
+
+    // Realizar una consulta para obtener los productos en el carrito activo y calcular el total
+    const [cartTotal] = await pool.query(
+      'SELECT SUM(pec.cantidad * p.precio_unitario_producto) AS total FROM productos_en_carrito AS pec ' +
+      'INNER JOIN carritos AS c ON pec.id_carrito = c.id_carrito ' +
+      'INNER JOIN productos AS p ON pec.id_producto = p.ID_producto ' +
+      'WHERE c.id_usuario_fk = ? AND c.estado_carrito_fk = 1',
+      [id_usuario]
+    );
+
+    // Obtener el total calculado
+    const total = cartTotal[0].total || 0;
+
+    return res.status(200).send({ status: 'SUCCESS', total });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).send({ status: 'FAILED', message: 'Error interno del servidor.' });
+  }
+};
+
+
+
 
 
 export const methods = {
     addtoCart,
     ViewToCart,
     updateCartItem,
-    DeleteCartItem
+    DeleteCartItem,
+    getTotalCart
 };

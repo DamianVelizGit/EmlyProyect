@@ -90,32 +90,32 @@ const createProduct = async (req, res) => {
 
 
 const updateProduct = async (req, res) => {
-  try {
-    const productId = req.params.id; // Obtén el ID del producto de los parámetros de la URL
-    const updatedFields = req.body; // Obtén los campos actualizados del cuerpo de la solicitud
+    try {
+        const productId = req.params.id; // Obtén el ID del producto de los parámetros de la URL
+        const updatedFields = req.body; // Obtén los campos actualizados del cuerpo de la solicitud
 
-    console.log(req.params);
-    console.log(req.body);
-    // Verifica que el ID del producto sea un número entero válido
-    if (!Number.isInteger(+productId)) {
-      return res.status(400).send({ status: "ERROR", message: "ID del producto no válido." });
+        console.log(req.params);
+        console.log(req.body);
+        // Verifica que el ID del producto sea un número entero válido
+        if (!Number.isInteger(+productId)) {
+            return res.status(400).send({ status: "ERROR", message: "ID del producto no válido." });
+        }
+
+        // Realiza la actualización en la base de datos
+        const updateQuery = "UPDATE productos SET ? WHERE ID_producto = ?";
+        const [result] = await pool.query(updateQuery, [updatedFields, productId]);
+
+        if (result.affectedRows === 1) {
+            // Si la actualización fue exitosa, responde con un código 200 (OK)
+            return res.status(200).send({ status: "SUCCESS", message: "Producto actualizado exitosamente." });
+        } else {
+            // Si la actualización no fue exitosa (por ejemplo, si el producto no existe), responde con un código 404 (Not Found)
+            return res.status(404).send({ status: "ERROR", message: "Producto no encontrado." });
+        }
+    } catch (error) {
+        console.error(error);
+        return res.status(500).send({ status: "FAILED", message: "Algo salió mal al actualizar el producto." });
     }
-
-    // Realiza la actualización en la base de datos
-    const updateQuery = "UPDATE productos SET ? WHERE ID_producto = ?";
-    const [result] = await pool.query(updateQuery, [updatedFields, productId]);
-
-    if (result.affectedRows === 1) {
-      // Si la actualización fue exitosa, responde con un código 200 (OK)
-      return res.status(200).send({ status: "SUCCESS", message: "Producto actualizado exitosamente." });
-    } else {
-      // Si la actualización no fue exitosa (por ejemplo, si el producto no existe), responde con un código 404 (Not Found)
-      return res.status(404).send({ status: "ERROR", message: "Producto no encontrado." });
-    }
-  } catch (error) {
-    console.error(error);
-    return res.status(500).send({ status: "FAILED", message: "Algo salió mal al actualizar el producto." });
-  }
 };
 
 
@@ -242,31 +242,31 @@ const createCategory = async (req, res) => {
 };
 
 const updateCategory = async (req, res) => {
-  try {
-    const categoryId = req.params.id; // Obtén el ID  de los parámetros de la URL
-    const updatedFields = req.body; // Obtén los campos actualizados del cuerpo de la solicitud
+    try {
+        const categoryId = req.params.id; // Obtén el ID  de los parámetros de la URL
+        const updatedFields = req.body; // Obtén los campos actualizados del cuerpo de la solicitud
 
 
-    // Verifica que el ID  sea un número entero válido
-    if (!Number.isInteger(+categoryId)) {
-      return res.status(400).send({ status: "ERROR", message: "ID dela categoria no es válido." });
+        // Verifica que el ID  sea un número entero válido
+        if (!Number.isInteger(+categoryId)) {
+            return res.status(400).send({ status: "ERROR", message: "ID dela categoria no es válido." });
+        }
+
+        // Realiza la actualización en la base de datos
+        const updateQuery = "UPDATE categorias SET ? WHERE ID_categoria = ?";
+        const [result] = await pool.query(updateQuery, [updatedFields, categoryId]);
+
+        if (result.affectedRows === 1) {
+            // Si la actualización fue exitosa, responde con un código 200 (OK)
+            return res.status(200).send({ status: "SUCCESS", message: "La categoria actualizada exitosamente." });
+        } else {
+            // Si la actualización no fue exitosa , responde con un código 404 (Not Found)
+            return res.status(404).send({ status: "ERROR", message: "Categoria no encontrada." });
+        }
+    } catch (error) {
+        console.error(error);
+        return res.status(500).send({ status: "FAILED", message: "Algo salió mal al actualizar la categoria." });
     }
-
-    // Realiza la actualización en la base de datos
-    const updateQuery = "UPDATE categorias SET ? WHERE ID_categoria = ?";
-    const [result] = await pool.query(updateQuery, [updatedFields, categoryId]);
-
-    if (result.affectedRows === 1) {
-      // Si la actualización fue exitosa, responde con un código 200 (OK)
-      return res.status(200).send({ status: "SUCCESS", message: "La categoria actualizada exitosamente." });
-    } else {
-      // Si la actualización no fue exitosa , responde con un código 404 (Not Found)
-      return res.status(404).send({ status: "ERROR", message: "Categoria no encontrada." });
-    }
-  } catch (error) {
-    console.error(error);
-    return res.status(500).send({ status: "FAILED", message: "Algo salió mal al actualizar la categoria." });
-  }
 };
 
 const CategoryDeleted = async (req, res) => {
@@ -304,6 +304,46 @@ const CategoryDeleted = async (req, res) => {
 };
 
 
+const searchProducts = async (req, res) => {
+    try {
+        // Obtener los parámetros de búsqueda y filtros de la solicitud
+        const { keywords, category, minPrice, maxPrice } = req.query;
+
+        // Construir la consulta SQL dinámica
+        let sql = 'SELECT * FROM productos WHERE 1';
+
+        if (keywords) {
+            // Agregar búsqueda por palabras clave
+            sql += ` AND nombre_producto LIKE '%${keywords}%'`;
+        }
+
+        if (category) {
+            // Agregar filtro por categoría
+            sql += ` AND categoria = '${category}'`;
+        }
+
+        if (minPrice) {
+            // Agregar filtro por precio mínimo
+            sql += ` AND precio_unitario_producto >= ${minPrice}`;
+        }
+
+        if (maxPrice) {
+            // Agregar filtro por precio máximo
+            sql += ` AND precio_unitario_producto <= ${maxPrice}`;
+        }
+
+        // Ejecutar la consulta en la base de datos
+        const [results] = await pool.query(sql);
+
+        // Devolver los resultados de la búsqueda como respuesta JSON
+        return res.status(200).send({ status: 'SUCCESS', results });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).send({ status: 'FAILED', message: 'Error interno del servidor.' });
+    }
+};
+
+
 
 
 export const methods = {
@@ -314,5 +354,6 @@ export const methods = {
     getCategory,
     createCategory,
     updateCategory,
-    CategoryDeleted
+    CategoryDeleted,
+    searchProducts
 };

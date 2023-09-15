@@ -32,6 +32,8 @@ router.patch('/update/product/:id', authentification, rolValidator("administrato
 
 router.delete('/delete/product/:id', authentification, rolValidator("administrator"), productController.deleteProduct)
 
+router.get('/searchProduc', authentification, productController.searchProducts);
+
 
 
 export default router

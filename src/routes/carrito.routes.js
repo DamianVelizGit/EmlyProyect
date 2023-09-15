@@ -16,5 +16,7 @@ router.patch('/update',authentification, shoppingCartController.updateCartItem)
 
 router.delete('/delete/:id_producto',authentification, shoppingCartController.DeleteCartItem)
 
+router.get('/cart-total',authentification, shoppingCartController.getTotalCart);
+
 
 export default router
