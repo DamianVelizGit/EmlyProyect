@@ -17,6 +17,7 @@ import imageRoutes  from "./routes/uploadImage.routes"
 import proveedorRoutes from "./routes/proveedor.routes"
 import shoppingCartRoutes from "./routes/carrito.routes"
 import purchaseOrderRoutes from "./routes/purchaseOrder.routes"
+import stadisticRoutes from "./routes/stadistic.routes"
 
 //Configuraciones
 app.set('port', 3001)
@@ -86,6 +87,7 @@ app.use('/v1/imagen', imageRoutes);
 app.use('/v1/provider', proveedorRoutes);
 app.use('/v1/cart', shoppingCartRoutes);
 app.use('/v1/order', purchaseOrderRoutes);
+app.use('/v1/stadistic', stadisticRoutes);
 
 
 
