@@ -305,42 +305,95 @@ const CategoryDeleted = async (req, res) => {
 
 
 const searchProducts = async (req, res) => {
-    try {
-        // Obtener los parámetros de búsqueda y filtros de la solicitud
-        const { keywords, category, minPrice, maxPrice } = req.query;
+  try {
+    // Obtener los parámetros de búsqueda y filtros de la solicitud
+    const { keywords, category, minPrice, maxPrice } = req.query;
 
-        // Construir la consulta SQL dinámica
-        let sql = 'SELECT * FROM productos WHERE 1';
+    // Lista de parámetros
+    const params = [];
 
-        if (keywords) {
-            // Agregar búsqueda por palabras clave
-            sql += ` AND nombre_producto LIKE '%${keywords}%'`;
-        }
+    // Construir la consulta SQL dinámica
+    let sql = 'SELECT * FROM productos WHERE 1';
 
-        if (category) {
-            // Agregar filtro por categoría
-            sql += ` AND categoria = '${category}'`;
-        }
-
-        if (minPrice) {
-            // Agregar filtro por precio mínimo
-            sql += ` AND precio_unitario_producto >= ${minPrice}`;
-        }
-
-        if (maxPrice) {
-            // Agregar filtro por precio máximo
-            sql += ` AND precio_unitario_producto <= ${maxPrice}`;
-        }
-
-        // Ejecutar la consulta en la base de datos
-        const [results] = await pool.query(sql);
-
-        // Devolver los resultados de la búsqueda como respuesta JSON
-        return res.status(200).send({ status: 'SUCCESS', results });
-    } catch (error) {
-        console.error(error);
-        return res.status(500).send({ status: 'FAILED', message: 'Error interno del servidor.' });
+    if (keywords) {
+      // Agregar búsqueda por palabras clave
+      sql += ` AND nombre_producto LIKE ?`;
+      params.push(`%${keywords}%`);
     }
+
+    if (category) {
+      // Agregar filtro por categoría
+      sql += ` AND categoria = ?`;
+      params.push(category);
+    }
+
+    if (minPrice) {
+      // Agregar filtro por precio mínimo
+      sql += ` AND precio_unitario_producto >= ?`;
+      params.push(parseFloat(minPrice));
+    }
+
+    if (maxPrice) {
+      // Agregar filtro por precio máximo
+      sql += ` AND precio_unitario_producto <= ?`;
+      params.push(parseFloat(maxPrice));
+    }
+
+    // Ejecutar la consulta en la base de datos
+    const [results] = await pool.query(sql, params);
+
+    // Devolver los resultados de la búsqueda como respuesta JSON
+    return res.status(200).send({ status: 'SUCCESS', results });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).send({ status: 'FAILED', message: 'Error interno del servidor.' });
+  }
+};
+
+
+const RestoreStock = async (req, res) => {
+  try {
+    const { id_producto, cantidad, id_proveedor } = req.body;
+    const id_usuario = req.user[0].ID_usuario;
+
+
+    // Validar que los parámetros sean números positivos
+    if (isNaN(id_producto) || isNaN(cantidad) || isNaN(id_proveedor) || cantidad <= 0) {
+      return res.status(400).send({ status: 'BAD_REQUEST', message: 'Parámetros de solicitud inválidos.' });
+    }
+
+    const connection = await pool.getConnection();
+    await connection.beginTransaction();
+
+    try {
+      // Verificar si el producto y el proveedor existen
+      const [productInfo] = await connection.query('SELECT * FROM productos WHERE ID_producto = ?', [id_producto]);
+      const [providerInfo] = await connection.query('SELECT * FROM proveedores WHERE ID_proveedor = ?', [id_proveedor]);
+
+      if (productInfo.length === 0 || providerInfo.length === 0) {
+        return res.status(404).send({ status: 'NOT_FOUND', message: 'Producto o proveedor no encontrado.' });
+      }
+
+      // Agregar la cantidad especificada al stock del producto
+      await connection.query('UPDATE productos SET cantidad_stock = cantidad_stock + ? WHERE ID_producto = ?', [cantidad, id_producto]);
+
+      // Registrar la transacción en el historial de reabastecimiento
+      await connection.query('INSERT INTO historial_stock (ID_producto_fk, ID_usuario_fk, ID_proveedor_fk, cantidad_anterior, cantidad_actual, fecha_creacion, fecha_modificacion) VALUES (?, ?, ?, ?, ?, NOW(), NOW())', [id_producto, id_usuario, id_proveedor, productInfo[0].cantidad_stock, productInfo[0].cantidad_stock + cantidad]);
+
+      await connection.commit();
+
+      return res.status(200).send({ status: 'SUCCESS', message: 'Stock reabastecido exitosamente.' });
+    } catch (error) {
+      await connection.rollback();
+      console.error(error);
+      return res.status(500).send({ status: 'FAILED', message: 'Error al reabastecer el stock.' });
+    } finally {
+      connection.release();
+    }
+  } catch (error) {
+    console.error(error);
+    return res.status(500).send({ status: 'FAILED', message: 'Error interno del servidor.' });
+  }
 };
 
 
@@ -355,5 +408,6 @@ export const methods = {
     createCategory,
     updateCategory,
     CategoryDeleted,
-    searchProducts
+    searchProducts,
+    RestoreStock
 };

@@ -34,6 +34,8 @@ router.delete('/delete/product/:id', authentification, rolValidator("administrat
 
 router.get('/searchProduc', authentification, productController.searchProducts);
 
+router.post('/restore-stock', authentification, rolValidator("administrator"), productController.RestoreStock)
+
 
 
 export default router

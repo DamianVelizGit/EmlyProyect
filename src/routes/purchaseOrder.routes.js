@@ -11,6 +11,7 @@ const router = Router();
 
 router.post('/create-order', authentification, purchaseController.CreateOrder)
 router.get('/view-orders', authentification, purchaseController.ViewOrders)
+router.put('/cancel-orders', authentification, purchaseController.CancelOrder)
 
 
 

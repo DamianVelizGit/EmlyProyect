@@ -4,7 +4,6 @@ import { pool } from "../database/database.js";
 const CreateOrder = async (req, res) => {
     try {
         const id_usuario = req.user[0].ID_usuario; //ID de usuario autenticado desde el token
-        const fecha_creacion = new Date(); // Obtiene la fecha actual
 
         // Asegúrate de que el usuario esté autenticado
         if (!id_usuario) {
@@ -17,7 +16,7 @@ const CreateOrder = async (req, res) => {
 
         try {
             // Insertar la nueva orden de compra
-            const [result] = await connection.query('INSERT INTO ordenes (id_usuario_fk, fecha_creacion, estado) VALUES (?, ?, ?)', [id_usuario, fecha_creacion, 'Pendiente']);
+            const [result] = await connection.query('INSERT INTO ordenes (id_usuario_fk, estado) VALUES (?, ?)', [id_usuario, 'Pendiente']);
 
             // Obtener el ID de la orden recién creada
             const id_orden = result.insertId;
@@ -31,6 +30,9 @@ const CreateOrder = async (req, res) => {
 
             for (const product of cartProducts) {
                 await connection.query('INSERT INTO detalles_orden (id_orden_fk, id_producto, cantidad) VALUES (?, ?, ?)', [id_orden, product.id_producto, product.cantidad]);
+
+                // Restar la cantidad vendida del stock del producto
+                await connection.query('UPDATE productos SET cantidad_stock = cantidad_stock - ? WHERE ID_producto = ?', [product.cantidad, product.id_producto]);
             }
 
             // Cambiar el estado del carrito a "pendiente"
@@ -53,7 +55,6 @@ const CreateOrder = async (req, res) => {
         console.error(error);
         return res.status(500).send({ status: 'FAILED', message: 'Error interno del servidor.' });
     }
-
 };
 
 
@@ -107,8 +108,61 @@ const ViewOrders = async (req, res) => {
 };
 
 
+// Ruta para cancelar una orden y restaurar el stock
+const CancelOrder = async (req, res) => {
+  try {
+    const { id_orden } = req.body;
+    // Verifica que el ID de la orden sea un número válido
+    if (isNaN(id_orden)) {
+      return res.status(400).send({ status: 'BAD_REQUEST', message: 'ID de orden inválido.' });
+    }
+
+    // Inicia una transacción
+    const connection = await pool.getConnection();
+    await connection.beginTransaction();
+
+    try {
+      // Obtiene el estado de la orden
+      const [orderStatus] = await connection.query('SELECT estado FROM ordenes WHERE ID_orden = ?', [id_orden]);
+
+      // Verifica si la orden existe y está en estado "Pendiente"
+      if (orderStatus.length === 0 || orderStatus[0].estado !== 'Pendiente') {
+        return res.status(400).send({ status: 'BAD_REQUEST', message: 'No se puede cancelar una orden que no está en estado "Pendiente".' });
+      }
+
+      // Obtiene los productos de la orden a cancelar
+      const [orderProducts] = await connection.query('SELECT id_producto, cantidad FROM detalles_orden WHERE id_orden_fk = ?', [id_orden]);
+
+      // Restaura el stock de los productos
+      for (const product of orderProducts) {
+        await connection.query('UPDATE productos SET cantidad_stock = cantidad_stock + ? WHERE ID_producto = ?', [product.cantidad, product.id_producto]);
+      }
+
+      // Cancela la orden
+      await connection.query('UPDATE ordenes SET estado = ? WHERE ID_orden = ?', ['Cancelada', id_orden]);
+
+      // Confirma la transacción
+      await connection.commit();
+
+      return res.status(200).send({ status: 'SUCCESS', message: 'Orden cancelada exitosamente.' });
+    } catch (error) {
+      // Si hay un error, deshace la transacción y maneja el error
+      await connection.rollback();
+      console.error(error);
+      return res.status(500).send({ status: 'FAILED', message: 'Error al cancelar la orden.' });
+    } finally {
+      // Cierra la conexión
+      connection.release();
+    }
+  } catch (error) {
+    console.error(error);
+    return res.status(500).send({ status: 'FAILED', message: 'Error interno del servidor.' });
+  }
+};
+
 
 export const methods = {
     CreateOrder,
-    ViewOrders
+    ViewOrders,
+    CancelOrder
 };
