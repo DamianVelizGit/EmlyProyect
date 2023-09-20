@@ -22,26 +22,34 @@ import { pool } from "../database/database.js";
 
 const logout = async (req, res) => {
     try {
+        const authorizationHeader = req.headers['authorization'];
+        if (!authorizationHeader) {
+            return res.status(401).json({ message: 'No se proporcionó un token de autorización.' });
+        }
+        console.log(authorizationHeader);
+        const token = authorizationHeader.split(' ')[1];
+
+
         // Elimina el token de la base 
         const [result] = await pool.query("DELETE FROM token WHERE nameToken = ?", [
-            req.token, // Suponiendo que el token se almacena en la sesión
+            token
         ]);
 
         if (result.affectedRows <= 0) {
-            return res.status(404).json({ message: "Token no encontrado" });
+            return res.status(404).send({ message: "Token no encontrado" });
         }
 
         // Destruye la sesión para el usuario
         req.session.destroy((err) => {
             if (err) {
                 console.error(err);
-                return res.status(500).json({ error: "Error al cerrar la sesión" });
+                return res.status(500).send({ error: "Error al cerrar la sesión" });
             }
-            res.status(200).json({ message: "Sesión cerrada correctamente" });
+            res.status(200).send({ message: "Sesión cerrada correctamente" });
         });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ error: "Error interno del servidor." });
+        res.status(500).send({ error: "Error interno del servidor." });
     }
 };
 
