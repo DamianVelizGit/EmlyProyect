@@ -11,6 +11,8 @@ const router = Router();
 //Ruta get para obtener todas las categorias
 router.get('/list/category', productController.getCategory)
 
+router.get('/list/countCategory', productController.countProductsByCategory)
+
 //Ruta post para crear las categorias
 router.post('/new/category', authentification, rolValidator("administrator"), productController.createCategory)
 

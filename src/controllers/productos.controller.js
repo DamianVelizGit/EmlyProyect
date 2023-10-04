@@ -10,48 +10,6 @@ setInterval(() => {
 
 
 
-const getProductsdeprec = async (req, res) => {
-    try {
-        const { page = 1 } = req.query; // Página opcional
-
-        // Valida que el parámetro de página sea un número positivo
-        const parsedPage = parseInt(page, 10);
-
-        if (isNaN(parsedPage) || parsedPage < 1) {
-            return res.status(400).json({ status: "FAILED", message: "Número de página inválido" });
-        }
-
-        const limit = 15; // Número de productos por página
-        const startIndex = (parsedPage - 1) * limit;
-
-        // Realiza una consulta para obtener la cantidad total de productos
-        const countQuery = "SELECT COUNT(*) as total FROM productos";
-        const [countResult] = await pool.query(countQuery);
-        const totalProducts = countResult[0].total;
-
-        // Calcula el número total de páginas
-        const totalPages = Math.ceil(totalProducts / limit);
-
-        // Realiza la consulta con paginación y límite
-        const query = "SELECT * FROM productos LIMIT ? OFFSET ?";
-        const [rows] = await pool.query(query, [limit, startIndex]);
-
-        // Responde con los productos y metadatos de paginación
-        res.status(200).send({
-            products: rows,
-            pagination: {
-                totalProducts,
-                totalPages,
-                currentPage: parsedPage,
-                productsPerPage: limit,
-            },
-        });
-    } catch (error) {
-        console.error(error);
-        return res.status(500).send({ status: "FAILED", message: "Algo salió mal al ver los Productos" });
-    }
-};
-
 const getProducts = async (req, res) => {
     try {
         const { page = 1, productsPerPage = 15 } = req.query; // Página y productos por página
@@ -419,8 +377,6 @@ const searchProductsByCategories = async (req, res) => {
 
 
 
-
-
 const RestoreStock = async (req, res) => {
     try {
         const { id_producto, cantidad, id_proveedor } = req.body;
@@ -467,6 +423,27 @@ const RestoreStock = async (req, res) => {
 };
 
 
+const countProductsByCategory = async (req, res) => {
+    try {
+        // Consulta SQL para contar productos por categoría y obtener los nombres de categorías
+        const query = `
+      SELECT c.nombre_categoria AS nombreCategoria, COUNT(p.ID_producto) AS cantidadProductos
+      FROM productos p
+      INNER JOIN categorias c ON p.Categorias_ID_fk = c.ID_categoria
+      GROUP BY p.Categorias_ID_fk, c.nombre_categoria
+    `;
+
+        // Ejecuta la consulta SQL
+        const [results] = await pool.query(query);
+
+        // Responde con los resultados
+        return res.status(200).json({ status: 'SUCCESS', data: results });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ status: 'FAILED', message: 'Error al contar productos por categoría.' });
+    }
+};
+
 
 
 export const methods = {
@@ -480,5 +457,6 @@ export const methods = {
     CategoryDeleted,
     searchProducts,
     RestoreStock,
-    searchProductsByCategories
+    searchProductsByCategories,
+    countProductsByCategory
 };

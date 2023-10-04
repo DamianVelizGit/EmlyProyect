@@ -110,31 +110,40 @@ const createUser = async (req, res) => {
 
 const updateUser = async (req, res) => {
   try {
-    const userId = req.params.id; // Obtén el ID  de los parámetros de la URL
+    const { user } = req; // Obtén el usuario
+    const userID = user[0].ID_usuario;
     const updatedFields = req.body; // Obtén los campos actualizados del cuerpo de la solicitud
 
-
-    // Verifica que el ID  sea un número entero válido
-    if (!Number.isInteger(+userId)) {
+    // Verifica que el ID sea un número entero válido
+    if (!Number.isInteger(+userID)) {
       return res.status(400).send({ status: "ERROR", message: "ID de usuario no es válido." });
+    }
+
+    // Validar que se proporcionen campos para actualizar
+    if (Object.keys(updatedFields).length === 0) {
+      return res.status(400).send({ status: "ERROR", message: "No se proporcionaron campos para actualizar." });
     }
 
     // Realiza la actualización en la base de datos
     const updateQuery = "UPDATE usuarios SET ? WHERE ID_usuario = ?";
-    const [result] = await pool.query(updateQuery, [updatedFields, userId]);
+    const [result] = await pool.query(updateQuery, [updatedFields, userID]);
 
-    if (result.affectedRows === 1) {
-      // Si la actualización fue exitosa, responde con un código 200 (OK)
+    if (result.affectedRows === 0) {
+      // Si la actualización no realizó cambios, responde con un mensaje
+      return res.status(200).send({ status: "SUCCESS", message: "No se realizaron cambios en el usuario." });
+    } else if (result.affectedRows === 1) {
+      // Si la actualización fue exitosa, responde con un mensaje
       return res.status(200).send({ status: "SUCCESS", message: "Usuario actualizado exitosamente." });
     } else {
-      // Si la actualización no fue exitosa , responde con un código 404 (Not Found)
-      return res.status(404).send({ status: "ERROR", message: "Usuario no encontrado." });
+      // En otros casos, la actualización no fue exitosa
+      return res.status(404).send({ status: "ERROR", message: "Usuario no encontrado o múltiples usuarios actualizados." });
     }
   } catch (error) {
     console.error(error);
     return res.status(500).send({ status: "FAILED", message: "Algo salió mal al actualizar el usuario." });
   }
 };
+
 
 
 const upload = async (req, res) => {
@@ -162,10 +171,34 @@ const viewProfile = async (req, res) => {
     }
 }
 
+const ListUserOrders = async (req, res) => {
+    try {
+        const id_usuario = req.user[0].ID_usuario; // Obtén el ID de usuario autenticado desde el token
+
+        // Consulta para obtener las órdenes del usuario
+        const query = `
+            SELECT id_orden, id_usuario_fk, fecha_creacion, estado
+            FROM ordenes
+            WHERE id_usuario_fk = ?
+        `;
+
+        // Ejecuta la consulta SQL
+        const [rows] = await pool.query(query, [id_usuario]);
+
+        // Responde con la lista de órdenes del usuario
+        return res.status(200).send({ status: 'SUCCESS', data: rows });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).send({ status: 'FAILED', message: 'Error al obtener las órdenes del usuario.' });
+    }
+};
+
+
 
 export const methods = {
     createUser,
     upload,
     viewProfile,
-    updateUser
+    updateUser,
+    ListUserOrders
 };

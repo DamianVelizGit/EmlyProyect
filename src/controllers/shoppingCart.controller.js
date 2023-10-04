@@ -59,7 +59,7 @@ const addtoCart = async (req, res) => {
                     return res.status(400).send({ status: 'BAD_REQUEST', message: 'La cantidad solicitada excede el stock disponible.' });
                 }
 
-                await connection.query('UPDATE productos_en_carrito SET cantidad = ?, precio_unitario= ?  WHERE id_carrito = ? AND id_producto = ?', [newCantidad, precio_unitario, id_carrito, id_producto]);
+                await connection.query('UPDATE productos_en_carrito SET cantidad = ? WHERE id_carrito = ? AND id_producto = ?', [newCantidad, id_carrito, id_producto]);
             }
 
             // Confirmar la transacción
@@ -112,8 +112,10 @@ const ViewToCart = async (req, res) => {
 
 const updateCartItem = async (req, res) => {
     try {
+        console.log("hola si entre");
         // Validar que los parámetros sean números y que id_usuario esté presente
         const { id_producto, cantidad } = req.body;
+        console.log(req.body);
         if (isNaN(id_producto) || isNaN(cantidad) || !req.user || !req.user[0].ID_usuario) {
             return res.status(400).send({ status: 'BAD_REQUEST', message: 'Parámetros de solicitud inválidos.' });
         }
@@ -219,31 +221,31 @@ const DeleteCartItem = async (req, res) => {
 };
 
 const getTotalCart = async (req, res) => {
-  try {
-    const id_usuario = req.user[0].ID_usuario; // Obtén el ID de usuario autenticado desde el token
+    try {
+        const id_usuario = req.user[0].ID_usuario; // Obtén el ID de usuario autenticado desde el token
 
-    // Verificar que el usuario esté autenticado
-    if (!id_usuario) {
-      return res.status(401).send({ status: 'UNAUTHORIZED', message: 'Usuario no autenticado.' });
+        // Verificar que el usuario esté autenticado
+        if (!id_usuario) {
+            return res.status(401).send({ status: 'UNAUTHORIZED', message: 'Usuario no autenticado.' });
+        }
+
+        // Realizar una consulta para obtener los productos en el carrito activo y calcular el total
+        const [cartTotal] = await pool.query(
+            'SELECT SUM(pec.cantidad * p.precio_unitario_producto) AS total FROM productos_en_carrito AS pec ' +
+            'INNER JOIN carritos AS c ON pec.id_carrito = c.id_carrito ' +
+            'INNER JOIN productos AS p ON pec.id_producto = p.ID_producto ' +
+            'WHERE c.id_usuario_fk = ? AND c.estado_carrito_fk = 1',
+            [id_usuario]
+        );
+
+        // Obtener el total calculado
+        const total = cartTotal[0].total || 0;
+
+        return res.status(200).send({ status: 'SUCCESS', total });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).send({ status: 'FAILED', message: 'Error interno del servidor.' });
     }
-
-    // Realizar una consulta para obtener los productos en el carrito activo y calcular el total
-    const [cartTotal] = await pool.query(
-      'SELECT SUM(pec.cantidad * p.precio_unitario_producto) AS total FROM productos_en_carrito AS pec ' +
-      'INNER JOIN carritos AS c ON pec.id_carrito = c.id_carrito ' +
-      'INNER JOIN productos AS p ON pec.id_producto = p.ID_producto ' +
-      'WHERE c.id_usuario_fk = ? AND c.estado_carrito_fk = 1',
-      [id_usuario]
-    );
-
-    // Obtener el total calculado
-    const total = cartTotal[0].total || 0;
-
-    return res.status(200).send({ status: 'SUCCESS', total });
-  } catch (error) {
-    console.error(error);
-    return res.status(500).send({ status: 'FAILED', message: 'Error interno del servidor.' });
-  }
 };
 
 

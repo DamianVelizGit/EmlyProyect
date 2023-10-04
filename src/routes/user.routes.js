@@ -15,6 +15,9 @@ const router = Router();
 //Ruta get para ver perfil de un usuario
 router.get('/view/profile', authentification, userController.viewProfile)
 
+
+router.get('/view/orders', authentification, userController.ListUserOrders)
+
 //Ruta post para crear un usuario
 router.post('/new', userController.createUser)
 
@@ -22,7 +25,7 @@ router.post('/new', userController.createUser)
 router.post('/login', loginController.loginUser)
 
 //Ruta patch para actualizar un usuario
-router.patch('/update/:id', authentification, userController.updateUser)
+router.patch('/update', authentification, userController.updateUser)
 
 
 router.post('/upload', upload.single("Perfil_Imagen"), (err, req, res, next) => {
