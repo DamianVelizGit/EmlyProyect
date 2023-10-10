@@ -9,7 +9,10 @@ const encrypt = async (textPlain) => {
 //Funcion para comparar 
 
 const compare = async (passPlain, hashPass) => {
-    return await bcrypt.compare(passPlain, hashPass)
+
+    const result = await bcrypt.compare(passPlain, hashPass)
+    console.log(result);
+    return result
 }
 
 module.exports = {encrypt, compare}

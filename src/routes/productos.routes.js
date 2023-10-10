@@ -24,7 +24,7 @@ router.delete('/delete/category/:id', authentification, rolValidator("administra
 //Ruta get para obtener todos los productos
 router.get('/list/products', productController.getProducts)
 
-router.get('/search/category', productController.searchProductsByCategories)
+router.get('/search/category', productController.searchProductsbyCategory)
 
 
 //Ruta post para crear un producto
@@ -36,7 +36,7 @@ router.patch('/update/product/:id', authentification, rolValidator("administrato
 
 router.delete('/delete/product/:id', authentification, rolValidator("administrator"), productController.deleteProduct)
 
-router.get('/searchProduc', authentification, productController.searchProducts);
+router.get('/searchProduc', productController.searchProducts);
 
 router.post('/restore-stock', authentification, rolValidator("administrator"), productController.RestoreStock)
 

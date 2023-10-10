@@ -12,11 +12,11 @@ setInterval(() => {
 
 const getProducts = async (req, res) => {
     try {
-        const { page = 1, productsPerPage = 15 } = req.query; // Página y productos por página
+        const { page = 1, productsPerPage = 15, category } = req.query; // Página, productos por página y categoría
 
         // Valida que los parámetros de página y productos por página sean números positivos
         const parsedPage = parseInt(page, 10);
-        const parsedProductsPerPage = parseInt(productsPerPage, 10);
+        const parsedProductsPerPage = parseInt(productsPerPage, 12);
 
         if (isNaN(parsedPage) || isNaN(parsedProductsPerPage) || parsedPage < 1 || parsedProductsPerPage < 1) {
             return res.status(400).json({ status: "FAILED", message: "Parámetros de paginación inválidos" });
@@ -24,17 +24,35 @@ const getProducts = async (req, res) => {
 
         const startIndex = (parsedPage - 1) * parsedProductsPerPage;
 
-        // Realiza una consulta para obtener la cantidad total de productos
+        // Construye la consulta base
+        let query = "SELECT * FROM productos";
+
+        // Si se proporciona una categoría, agrega la cláusula WHERE para filtrar por categoría
+        if (category) {
+            query += " WHERE Categorias_ID_fk = ?";
+        }
+
+        // Realiza una consulta para obtener la cantidad total de productos (con o sin filtro de categoría)
         const countQuery = "SELECT COUNT(*) as total FROM productos";
         const [countResult] = await pool.query(countQuery);
+
+        // Obtiene la cantidad total de productos
         const totalProducts = countResult[0].total;
 
         // Calcula el número total de páginas
         const totalPages = Math.ceil(totalProducts / parsedProductsPerPage);
 
-        // Realiza la consulta con paginación y límite
-        const query = "SELECT * FROM productos LIMIT ? OFFSET ?";
-        const [rows] = await pool.query(query, [parsedProductsPerPage, startIndex]);
+        // Ejecuta la consulta con paginación y filtro de categoría si es necesario
+        let params = [parsedProductsPerPage, startIndex];
+
+        if (category) {
+            params = [category, ...params]; // Agrega la categoría a los parámetros
+            query += " LIMIT ? OFFSET ?";
+        } else {
+            query += " LIMIT ? OFFSET ?";
+        }
+
+        const [rows] = await pool.query(query, params);
 
         // Responde con los productos y metadatos de paginación
         res.status(200).send({
@@ -48,9 +66,10 @@ const getProducts = async (req, res) => {
         });
     } catch (error) {
         console.error(error);
-        return res.status(500).send({ status: "FAILED", message: "Algo salió mal al ver los Productos" });
+        return res.status(500).send({ status: "FAILED", message: "Algo salió mal al obtener los Productos" });
     }
 };
+
 
 
 
@@ -308,7 +327,7 @@ const CategoryDeleted = async (req, res) => {
 const searchProducts = async (req, res) => {
     try {
         // Obtener los parámetros de búsqueda y filtros de la solicitud
-        const { keywords, category, minPrice, maxPrice } = req.query;
+        const { keywords } = req.query;
 
         // Lista de parámetros
         const params = [];
@@ -322,22 +341,32 @@ const searchProducts = async (req, res) => {
             params.push(`%${keywords}%`);
         }
 
+        // Ejecutar la consulta en la base de datos
+        const [results] = await pool.query(sql, params);
+
+        // Devolver los resultados de la búsqueda como respuesta JSON
+        return res.status(200).send({ status: 'SUCCESS', results });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).send({ status: 'FAILED', message: 'Error interno del servidor.' });
+    }
+};
+
+const searchProductsbyCategory = async (req, res) => {
+    try {
+        // Obtener los parámetros de búsqueda y filtros de la solicitud
+        const { category } = req.query;
+
+        // Lista de parámetros
+        const params = [];
+
+        // Construir la consulta SQL dinámica
+        let sql = 'SELECT * FROM productos WHERE 1';
+
         if (category) {
-            // Agregar filtro por categoría
-            sql += ` AND categoria = ?`;
-            params.push(category);
-        }
-
-        if (minPrice) {
-            // Agregar filtro por precio mínimo
-            sql += ` AND precio_unitario_producto >= ?`;
-            params.push(parseFloat(minPrice));
-        }
-
-        if (maxPrice) {
-            // Agregar filtro por precio máximo
-            sql += ` AND precio_unitario_producto <= ?`;
-            params.push(parseFloat(maxPrice));
+            // Agregar búsqueda por palabras clave
+            sql += ` AND Categorias_ID_fk LIKE ?`;
+            params.push(`%${category}%`);
         }
 
         // Ejecutar la consulta en la base de datos
@@ -458,5 +487,6 @@ export const methods = {
     searchProducts,
     RestoreStock,
     searchProductsByCategories,
-    countProductsByCategory
+    countProductsByCategory,
+    searchProductsbyCategory
 };
