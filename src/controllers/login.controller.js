@@ -67,8 +67,6 @@ const loginUser = async (req, res) => {
     }
 };
 
-
-
 function checkLogin(req, res, next) {
     if (req.session.token && req.session.usuario) {
         // El usuario tiene una sesión válida
@@ -98,6 +96,9 @@ async function getUserByEmail(email) {
         res.status(500).send({ status: "ERROR", message: 'Error al encontrar un usuario con ese correo electronico' });
     }
 }
+
+
+
 
 const forgotPass = async (req, res) => {
     try {
@@ -130,27 +131,103 @@ const forgotPass = async (req, res) => {
 
         const [result] = await pool.query(insertQuery, [code, userId, formattedDate]);
 
-        res.status(200).send({ success: true, message: 'Código de recuperación insertado con éxito', codeId: result.insertId });
+        // Construye el HTML del correo con el token de recuperación 
+        const contentHTML = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-        // Construye el HTML del correo con el token de recuperación (si deseas enviar el correo)
-        // const contentHTML = `
-        //   <h1>INFORMACIÓN DE RECUPERACIÓN</h1>
-        //   <ul> 
-        //     <li>Email: ${email}</li>
-        //     <li>Token de recuperación: ${recoveryToken}</li>
-        //   </ul>
-        //   <p>Este es tu correo de recuperación</p>
-        // `;
+    <style>
+        p, a, h1, h2, h3, h4, h5, h6 {font-family: 'Roboto', sans-serif !important;}
+        h1{ font-size: 30px !important;}
+        h2{ font-size: 25px !important;}
+        h3{ font-size: 18px !important;}
+        h4{ font-size: 16px !important;}
+        p, a{font-size: 15px !important;}
 
-        // Envía el correo de recuperación (si deseas enviar el correo)
-        // const result = await transporter.sendMail({
-        //     from: `Emly-Store ${EMAIL}`,
-        //     to: email,
-        //     subject: "Recuperación de contraseña",
-        //     html: contentHTML
-        // });
+        .imag{
+            width: 20px;
+            height: 20px;
+        }
+        .contA{
+            margin: 0px 5px 0 5px;
+        }
+        .afooter{
+            color: #ffffff !important; 
+            text-decoration: none;
+            font-size: 13px !important;
+        }
+        .title{
+            color: #ffffff !important; 
+        }
+    </style>
+</head>
+<body>
+    <div style="width: 100%; background-color: #e3e3e3;">
+        <div style="padding: 20px 10px 20px 10px;">
+            <!-- Titulo inicial -->
+            <div style="background-color: #000000; padding: 10px 0px 10px 0px; width: 100%; text-align: center;">
+                <h3 class="title">Emly-Store Codigo de Recuperacion</h3>
+            </div>
+            <!-- Titulo inicial -->
 
-        // console.log({ result });
+            <!-- Contenido principal -->
+            <div style="background-color: #ffffff; padding: 20px 0px 5px 0px; width: 100%; text-align: center;">
+                <h1>Codigo de recuperacion</h1>
+                <p>Hemos recibido una solicitud de recuperación de cuenta asociada a tu correo electrónico. El código de recuperación que necesitarás para este proceso es el siguiente:
+
+            Código de Recuperación: </p> <h2>${code}</h2>
+            <p>Si no has solicitado un código de recuperación, te recomendamos encarecidamente que hagas caso omiso de este correo electrónico.Puedes contactarnos de inmediato si tienes alguna preocupación o sospecha de actividades no autorizadas en tu cuenta.
+            </p>    
+
+                <!-- Gracias -->
+                <p>Gracias por tu tiempo.</p>
+                <p style="margin-bottom: 50px;"><i>Atentamente:</i><br>Emly-Store</p>
+
+
+            <!-- Contenido principal -->
+
+            <!-- Footer -->
+            <div style="background-color: #282828; color: #ffffff; padding: 5px 0px 0px 0px; width: 100%; text-align: center;">
+
+                <h4>Soporte</h4>
+                <p style="font-size: 13px; padding: 0px 20px 0px 20px;">
+                    Comunícate con nosotros por los siguientes medios:<br>
+                    Whatsapp: <a class="afooter" href="https://wa.me/50254873972">+502 5487 3972</a><br>
+                </p>
+                <p style="background-color: black; padding: 10px 0px 10px 0px; font-size: 12px !important;">
+                    © 2023 Emly-Store, todos los derechos reservados.
+                </p>
+            </div>
+            <!-- Footer -->
+
+
+
+        </div>
+    </div>
+</body>
+</html>
+        `;
+
+        // Envía el correo de recuperación 
+        const result1 = await transporter.sendMail({
+            from: `Emly-Store ${EMAIL}`,
+            to: email,
+            subject: "Recuperación de contraseña",
+            html: contentHTML
+            // attachments:
+            // {
+            //     filename: 'logo',
+            //     path: './assets/logo.png',
+            //     cid: 'logo',
+            // }
+        });
+
+        res.status(200).send({ success: true, message: 'Código de recuperación insertado con éxito y email enviado correctamente', codeId: result.insertId });
+
     } catch (error) {
         console.error(error);
         res.status(500).send({ success: false, message: 'Error al enviar el correo electrónico de recuperación' });
@@ -158,6 +235,7 @@ const forgotPass = async (req, res) => {
 }
 
 function generateRecoveryCode() {
+
     let code = "";
     for (let i = 0; i <= 4; i++) {
         let character = Math.ceil(Math.random() * 9);
@@ -194,7 +272,6 @@ const verifyRecoveryCode = async (req, res) => {
         res.status(500).send({ success: false, message: 'Error al verificar el código de recuperación' });
     }
 }
-
 
 const resetPass = async (req, res) => {
     try {
