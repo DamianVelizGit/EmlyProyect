@@ -12,6 +12,8 @@ router.post('/agregar-al-carrito',authentification, shoppingCartController.addto
 
 router.get('/view-cart',authentification, shoppingCartController.ViewToCart)
 
+router.get('/countProduct-cart',authentification, shoppingCartController.countProductsInCart)
+
 router.patch('/update',authentification, shoppingCartController.updateCartItem)
 
 router.delete('/delete/:id_producto',authentification, shoppingCartController.DeleteCartItem)

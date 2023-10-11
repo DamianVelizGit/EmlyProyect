@@ -105,9 +105,10 @@ const forgotPass = async (req, res) => {
         const { email } = req.body;
 
         // Verificar si el correo existe en la base de datos antes de enviar el correo de recuperación
+        console.log(email);
         const user = await getUserByEmail(email);
         if (!user) {
-            return res.status(400).send({ success: false, message: "El correo electrónico no está registrado" });
+            return res.status(400).send({ success: false, message: "El correo electrónico no está registrado o no esta enviando un correo" });
         }
 
         // Generar un token de recuperación (código) de forma aleatoria
@@ -226,7 +227,7 @@ const forgotPass = async (req, res) => {
             // }
         });
 
-        res.status(200).send({ success: true, message: 'Código de recuperación insertado con éxito y email enviado correctamente', codeId: result.insertId });
+        res.status(200).send({ success: true, message: 'Código de recuperación enviado con exito, porfavor revise su bandeja de entrda o SPAM'});
 
     } catch (error) {
         console.error(error);
@@ -258,7 +259,7 @@ const verifyRecoveryCode = async (req, res) => {
             WHERE code_user = ? AND fecha_expiracion = ?
         `;
 
-        const [results] = await pool.query(query, [code, formattedDate]);
+        const [[results]] = await pool.query(query, [code, formattedDate]);
 
         if (results.length === 0) {
             return res.status(400).send({ success: false, message: 'Código de recuperación no válido' });
@@ -266,7 +267,8 @@ const verifyRecoveryCode = async (req, res) => {
 
         // Si el código es válido, puedes realizar acciones adicionales aquí
 
-        res.status(200).send({ success: true, message: 'Código de recuperación válido' });
+        res.status(200).send({ success: true, message: 'Código de recuperación válidado correctamente', iduser: results.User_fk });
+
     } catch (error) {
         console.error(error);
         res.status(500).send({ success: false, message: 'Error al verificar el código de recuperación' });
@@ -278,12 +280,12 @@ const resetPass = async (req, res) => {
         const { userId, newPassword, confirmPassword } = req.body;
 
         if (!newPassword || !confirmPassword) {
-            return res.status(400).send({ status: "ERROR", message: "Faltan campos obligatorios" });
+            return res.status(400).send({ status: "ERROR", message: "Faltan campos obligatorios", state: "info", title: "Informacion" });
         }
 
         // Validar que las contraseñas coincidan
         if (newPassword !== confirmPassword) {
-            return res.status(400).json({ success: false, message: "Las contraseñas no coinciden" });
+            return res.status(400).send({ success: false, message: "Las contraseñas no coinciden", state: "warning", title: "Atencion" });
         }
 
         // Generar un hash seguro para la contraseña del usuario
@@ -295,10 +297,10 @@ const resetPass = async (req, res) => {
 
         if (result.affectedRows === 0) {
             // No se encontró el usuario con el ID proporcionado
-            return res.status(404).json({ success: false, message: "Usuario no encontrado" });
+            return res.status(404).json({ success: false, message: "Usuario no encontrado",state: "warning", title: "Atencion"  });
         }
 
-        return res.status(200).json({ success: true, message: "Contraseña actualizada con éxito" });
+        return res.status(200).json({ success: true, message: "Contraseña actualizada con éxito" , state: "success" , title: "Cambio Exitoso"});
     } catch (error) {
         console.error(error);
         return res.status(500).json({ success: false, message: "Error al actualizar la contraseña" });

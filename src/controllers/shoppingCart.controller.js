@@ -109,6 +109,28 @@ const ViewToCart = async (req, res) => {
     }
 };
 
+const countProductsInCart = async (req, res) => {
+    try {
+        const id_usuario = req.user[0].ID_usuario; // Obtén el ID de usuario autenticado desde el token
+
+        const countQuery = `
+            SELECT COUNT(pec.id_producto_carrito) as cantidad
+            FROM productos_en_carrito AS pec
+            INNER JOIN carritos AS c ON pec.id_carrito = c.id_carrito
+            WHERE c.id_usuario_fk = ? AND c.estado_carrito_fk = 1
+        `;
+
+        const [countRows] = await pool.query(countQuery, [id_usuario]);
+
+        // Responde con la cantidad de productos en el carrito activo
+        return res.status(200).json({ status: 'SUCCESS', cantidadProductos: countRows[0].cantidad });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ status: 'FAILED', message: 'Error al contar los productos en el carrito activo.' });
+    }
+};
+
+
 
 const updateCartItem = async (req, res) => {
     try {
@@ -257,5 +279,6 @@ export const methods = {
     ViewToCart,
     updateCartItem,
     DeleteCartItem,
-    getTotalCart
+    getTotalCart,
+    countProductsInCart
 };

@@ -29,7 +29,7 @@ router.post('/forgotPass', loginController.forgotPass)
 
 router.post('/resetPass', loginController.resetPass)
 
-router.get('/verify-code', loginController.verifyRecoveryCode)
+router.post('/verify-code', loginController.verifyRecoveryCode)
 
 //Ruta patch para actualizar un usuario
 router.patch('/update', authentification, userController.updateUser)
