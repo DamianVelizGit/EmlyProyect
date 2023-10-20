@@ -24,8 +24,9 @@ router.delete('/delete/category/:id', authentification, rolValidator("administra
 //Ruta get para obtener todos los productos
 router.get('/list/products', productController.getProducts)
 
-router.get('/search/category', productController.searchProductsbyCategory)
+router.post('/detaill/product', productController.getDetaillProduct)
 
+router.get('/search/category', productController.searchProductsbyCategory)
 
 //Ruta post para crear un producto
 router.post('/new/product', authentification, rolValidator("administrator"), productController.createProduct)

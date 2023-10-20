@@ -70,8 +70,29 @@ const getProducts = async (req, res) => {
     }
 };
 
+const getDetaillProduct = async (req, res) => {
+    try {
+        const { IDDetalleProducto } = req.body;
 
+        if (!IDDetalleProducto) {
+            return res.status(400).send({ status: "FAILED", message: "Falta el ID del producto" });
+        }
 
+        // Realiza una consulta para obtener un solo producto por su ID
+        const query = "SELECT * FROM productos WHERE id_producto = ?";
+        const [rows] = await pool.query(query, [IDDetalleProducto]);
+
+        if (rows.length === 0) {
+            return res.status(404).send({ status: "FAILED", message: "Producto no encontrado" });
+        }
+
+        // Responde con el producto encontrado
+        res.status(200).send({ status: "SUCCESS", product: rows[0] });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).send({ status: "FAILED", message: "Algo salió mal al obtener el producto" });
+    }
+};
 
 const createProduct = async (req, res) => {
     try {
@@ -108,7 +129,6 @@ const createProduct = async (req, res) => {
     }
 };
 
-
 const updateProduct = async (req, res) => {
     try {
         const productId = req.params.id; // Obtén el ID del producto de los parámetros de la URL
@@ -137,7 +157,6 @@ const updateProduct = async (req, res) => {
         return res.status(500).send({ status: "FAILED", message: "Algo salió mal al actualizar el producto." });
     }
 };
-
 
 const deleteProduct = async (req, res) => {
     try {
@@ -179,8 +198,6 @@ const deleteProduct = async (req, res) => {
         return res.status(500).send({ status: "FAILED", message: "Algo salió mal al eliminar el producto." });
     }
 };
-
-
 
 //Controlador para obtener las categorias
 const getCategory = async (req, res) => {
@@ -323,7 +340,6 @@ const CategoryDeleted = async (req, res) => {
     }
 };
 
-
 const searchProducts = async (req, res) => {
     try {
         // Obtener los parámetros de búsqueda y filtros de la solicitud
@@ -404,8 +420,6 @@ const searchProductsByCategories = async (req, res) => {
     }
 };
 
-
-
 const RestoreStock = async (req, res) => {
     try {
         const { id_producto, cantidad, id_proveedor } = req.body;
@@ -451,7 +465,6 @@ const RestoreStock = async (req, res) => {
     }
 };
 
-
 const countProductsByCategory = async (req, res) => {
     try {
         // Consulta SQL para contar productos por categoría y obtener los nombres de categorías
@@ -477,6 +490,7 @@ const countProductsByCategory = async (req, res) => {
 
 export const methods = {
     getProducts,
+    getDetaillProduct,
     createProduct,
     updateProduct,
     deleteProduct,
