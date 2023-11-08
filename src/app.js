@@ -1,8 +1,8 @@
 import express from "express"
 import morgan from "morgan";
-import {SECRET} from './config'
-import {sessionStore} from './database/database.js'
-const multer = require('multer') 
+import { SECRET } from './config'
+import { sessionStore } from './database/database.js'
+const multer = require('multer')
 const session = require('express-session');
 
 
@@ -13,7 +13,7 @@ import administradorRoutes from "./routes/admin.routes";
 import logoutRoutes from "./routes/logout.routes";
 import productoctRoutes from "./routes/productos.routes";
 import userRoutes from "./routes/user.routes";
-import imageRoutes  from "./routes/uploadImage.routes"
+import imageRoutes from "./routes/uploadImage.routes"
 import proveedorRoutes from "./routes/proveedor.routes"
 import shoppingCartRoutes from "./routes/carrito.routes"
 import purchaseOrderRoutes from "./routes/purchaseOrder.routes"
@@ -32,14 +32,14 @@ app.use((req, res, next) => {
 })
 
 //Configuración para el uso de sesiones
-     app.use(session({
-        key: "cookieUser",
-        secret: SECRET,
-        maxAge: 24 * 60 * 60 * 1000,
-        store: sessionStore,
-        resave: false,
-        saveUninitialized: false
-    }))
+app.use(session({
+  key: "cookieUser",
+  secret: SECRET,
+  maxAge: 24 * 60 * 60 * 1000,
+  store: sessionStore,
+  resave: false,
+  saveUninitialized: false
+}))
 
 
 
@@ -79,10 +79,10 @@ app.use(express.urlencoded({ extended: true }));
 
 
 //Rutas
-app.use('/v1/administrators', administradorRoutes); 
-app.use('/v1/user', userRoutes); 
-app.use('/v1', logoutRoutes); 
-app.use('/v1/product', productoctRoutes); 
+app.use('/v1/administrators', administradorRoutes);
+app.use('/v1/user', userRoutes);
+app.use('/v1', logoutRoutes);
+app.use('/v1/product', productoctRoutes);
 app.use('/v1/imagen', imageRoutes);
 app.use('/v1/provider', proveedorRoutes);
 app.use('/v1/cart', shoppingCartRoutes);
@@ -91,8 +91,8 @@ app.use('/v1/stadistic', stadisticRoutes);
 
 
 
-app.use((req, res, next) =>{
-    res.status(404).json({message: 'Not found endopoint'});
+app.use((req, res, next) => {
+  res.status(404).json({ message: 'Not found endopoint' });
 })
 
 export default app;

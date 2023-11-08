@@ -227,7 +227,7 @@ const forgotPass = async (req, res) => {
             // }
         });
 
-        res.status(200).send({ success: true, message: 'Código de recuperación enviado con exito, porfavor revise su bandeja de entrda o SPAM'});
+        res.status(200).send({ success: true, message: 'Código de recuperación enviado con exito, porfavor revise su bandeja de entrda o SPAM' });
 
     } catch (error) {
         console.error(error);
@@ -297,10 +297,10 @@ const resetPass = async (req, res) => {
 
         if (result.affectedRows === 0) {
             // No se encontró el usuario con el ID proporcionado
-            return res.status(404).json({ success: false, message: "Usuario no encontrado",state: "warning", title: "Atencion"  });
+            return res.status(404).json({ success: false, message: "Usuario no encontrado", state: "warning", title: "Atencion" });
         }
 
-        return res.status(200).json({ success: true, message: "Contraseña actualizada con éxito" , state: "success" , title: "Cambio Exitoso"});
+        return res.status(200).json({ success: true, message: "Contraseña actualizada con éxito", state: "success", title: "Cambio Exitoso" });
     } catch (error) {
         console.error(error);
         return res.status(500).json({ success: false, message: "Error al actualizar la contraseña" });

@@ -81,13 +81,41 @@ const addtoCart = async (req, res) => {
     }
 };
 
+// const ViewToCart = async (req, res) => {
+//     try {
+//         const id_usuario = req.user[0].ID_usuario; // Obtén el ID de usuario autenticado desde el token
+
+//         // Consulta para obtener los productos en el carrito del usuario
+//         const query = `
+//             SELECT pec.id_producto_carrito,p.id_producto, p.nombre_producto, pec.cantidad, p.precio_unitario_producto
+//             FROM productos_en_carrito AS pec
+//             INNER JOIN productos AS p ON pec.id_producto = p.id_producto
+//             WHERE pec.id_carrito IN (
+//                 SELECT id_carrito
+//                 FROM carritos
+//                 WHERE id_usuario_fk = ?
+//                 AND estado_carrito_fk = 1
+//             )
+//         `;
+
+//         // Ejecuta la consulta SQL
+//         const [rows] = await pool.query(query, [id_usuario]);
+
+//         // Responde con la lista de productos en el carrito
+//         return res.status(200).json({ status: 'SUCCESS', data: rows });
+//     } catch (error) {
+//         console.error(error);
+//         return res.status(500).json({ status: 'FAILED', message: 'Error al obtener el contenido del carrito.' });
+//     }
+// };
+
 const ViewToCart = async (req, res) => {
     try {
         const id_usuario = req.user[0].ID_usuario; // Obtén el ID de usuario autenticado desde el token
 
         // Consulta para obtener los productos en el carrito del usuario
         const query = `
-            SELECT pec.id_producto_carrito,p.id_producto, p.nombre_producto, pec.cantidad, p.precio_unitario_producto
+            SELECT pec.id_producto_carrito, p.id_producto, p.nombre_producto, pec.cantidad, p.precio_unitario_producto
             FROM productos_en_carrito AS pec
             INNER JOIN productos AS p ON pec.id_producto = p.id_producto
             WHERE pec.id_carrito IN (
@@ -101,13 +129,32 @@ const ViewToCart = async (req, res) => {
         // Ejecuta la consulta SQL
         const [rows] = await pool.query(query, [id_usuario]);
 
-        // Responde con la lista de productos en el carrito
-        return res.status(200).json({ status: 'SUCCESS', data: rows });
+        // Calcular el subtotal de cada producto y el total general del carrito
+        let totalGeneral = 0;
+        const productosEnCarrito = rows.map((row) => {
+            const cantidad = row.cantidad;
+            const precioUnitario = row.precio_unitario_producto;
+            const subtotal = cantidad * precioUnitario;
+            totalGeneral += subtotal;
+
+            return {
+                id_producto_carrito: row.id_producto_carrito,
+                id_producto: row.id_producto,
+                nombre_producto: row.nombre_producto,
+                cantidad: cantidad,
+                precio_unitario_producto: precioUnitario,
+                subtotal: subtotal
+            };
+        });
+
+        // Responde con la lista de productos en el carrito y el total general
+        return res.status(200).send({ status: 'SUCCESS', data: productosEnCarrito, totalGeneral });
     } catch (error) {
         console.error(error);
-        return res.status(500).json({ status: 'FAILED', message: 'Error al obtener el contenido del carrito.' });
+        return res.status(500).send({ status: 'FAILED', message: 'Error al obtener el contenido del carrito.' });
     }
 };
+
 
 const countProductsInCart = async (req, res) => {
     try {
@@ -134,7 +181,6 @@ const countProductsInCart = async (req, res) => {
 
 const updateCartItem = async (req, res) => {
     try {
-        console.log("hola si entre");
         // Validar que los parámetros sean números y que id_usuario esté presente
         const { id_producto, cantidad } = req.body;
         console.log(req.body);

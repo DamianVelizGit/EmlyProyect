@@ -1,6 +1,6 @@
 import { pool } from "../database/database.js";
 const multer = require('multer');
-
+const sharp = require('sharp');
 
 // Configuración de Multer para guardar las imágenes en el servidor
 const storage = multer.memoryStorage(); // Almacenar las imágenes en memoria
@@ -9,7 +9,7 @@ const upload = multer({ storage: storage });
 
 const uploadImage = async (req, res) => {
     try {
-        upload.single('image')(req, res, async (err) => {
+        upload.single('avatarProfile')(req, res, async (err) => {
             if (err) {
                 console.error('Error al cargar la imagen:', err);
                 return res.status(400).send({ message: 'Error al cargar la imagen' });
@@ -19,6 +19,7 @@ const uploadImage = async (req, res) => {
             const imageBuffer = req.file.buffer; // El archivo de imagen en formato BLOB
 
             console.log(user[0].ID_usuario);
+            console.log("la imagen del buffer", imageBuffer);
 
             // Verifica si el usuario existe en la base de datos
             const [userRows] = await pool.query(
@@ -34,7 +35,7 @@ const uploadImage = async (req, res) => {
             const sql = 'UPDATE usuarios SET imagen_usuario = ? WHERE ID_usuario = ?';
 
             await pool.query(sql, [imageBuffer, user[0].ID_usuario], (dbErr, result) => {
-                if (dbErr) {
+                if (dnbErr) {
                     console.error('Error al insertar la imagen en la base de datos:', dbErr);
                     return res.status(500).send({ message: 'Error al insertar la imagen' });
                 }
@@ -49,8 +50,29 @@ const uploadImage = async (req, res) => {
     }
 };
 
+const addUserAvatar = async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).send({ error: "No se proporcionó una imágen para subir." });
+        }
+
+        const { user } = req;
+        const buffer = await sharp(req.file.buffer).resize({
+            width: 250,
+            height: 250
+        }).png({ compressionLevel: 9 }).toBuffer();
+
+        user.foto_perfil = buffer;
+
+        await user.save();
+        res.status(200).send({ msg: "Foto de perfil guardada con éxito." });
+    } catch (error) {
+        res.status(500).send({ msg: error.message });
+    }
+};
 
 
 export const methods = {
-    uploadImage
+    uploadImage,
+    addUserAvatar
 };
