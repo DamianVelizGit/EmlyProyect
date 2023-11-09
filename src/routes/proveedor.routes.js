@@ -10,15 +10,17 @@ import { methods as providerControler } from './../controllers/proveedor.control
 const router = Router();
 
 
-router.post('/new', authentification, rolValidator("administrator"), providerControler.createProvider)
+router.post('/new', authentification, rolValidator("SuperAdministrator"), providerControler.createProvider)
 
-router.get('/list/providers', authentification, rolValidator("administrator"), providerControler.viewProviders)
+router.get('/list/providers', authentification, rolValidator("SuperAdministrator"), providerControler.viewProviders)
+
+router.get('/list/providersPaginacion', authentification, rolValidator("SuperAdministrator"), providerControler.getProviderPaginacion)
 
 //Ruta patch para actualizar un usuario
-router.patch('/update/:id', authentification, rolValidator("administrator"), providerControler.UpdateProvider)
+router.patch('/update/:id', authentification, rolValidator("SuperAdministrator"), providerControler.UpdateProvider)
 
 
-router.delete('/deletePr/:id', authentification, rolValidator("administrator"), providerControler.DeleteProvider)
+router.delete('/deletePr/:id', authentification, rolValidator("SuperAdministrator"), providerControler.DeleteProvider)
 
 
 

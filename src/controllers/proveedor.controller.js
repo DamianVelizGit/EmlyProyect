@@ -81,6 +81,44 @@ const viewProviders = async (req, res) => {
     }
 };
 
+
+const getProviderPaginacion = async (req, res) => {
+    try {
+        const { page = 1, productsPerPage = 15 } = req.query;
+
+        const parsedPage = parseInt(page, 10);
+        const parsedProductsPerPage = parseInt(productsPerPage, 10);
+
+        const startIndex = (parsedPage - 1) * parsedProductsPerPage;
+
+        let query = "SELECT * FROM proveedores";
+
+        query += ` LIMIT ${parsedProductsPerPage} OFFSET ${startIndex}`;
+
+        const [rows] = await pool.query(query);
+
+        const countQuery = "SELECT COUNT(*) as total FROM proveedores WHERE Estado_ID_fk = 1";
+        const [countResult] = await pool.query(countQuery);
+        const totalProviders = countResult[0].total;
+
+        const totalPages = Math.ceil(totalProviders / parsedProductsPerPage);
+
+        res.status(200).send({
+            categories: rows,
+            pagination: {
+                totalProviders,
+                totalPages,
+                currentPage: parsedPage,
+                productsPerPage: parsedProductsPerPage
+            } 
+        });
+
+    } catch (error) {
+        return res.status(500).send({ status: "FAILED", message: "Algo salió mal al ver los proveedores" });
+    }
+};
+
+
 const DeleteProvider = async (req, res) => {
     try {
         const { id } = req.params; // Supongo que el ID del proveedor se pasa como parámetro en la URL
@@ -148,5 +186,6 @@ export const methods = {
     createProvider,
     viewProviders,
     UpdateProvider,
-    DeleteProvider
+    DeleteProvider,
+    getProviderPaginacion
 };

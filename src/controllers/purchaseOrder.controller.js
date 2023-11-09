@@ -88,36 +88,36 @@ const ViewOrders = async (req, res) => {
     const [orders] = await pool.query(query, [id_usuario]);
 
     // Formatear los datos para una respuesta más presentable
-    // const formattedOrders = [];
+    const formattedOrders = [];
 
-    // for (const order of orders) {
-    //   const existingOrder = formattedOrders.find((formattedOrder) => formattedOrder.id_orden === order.id_orden);
+    for (const order of orders) {
+      const existingOrder = formattedOrders.find((formattedOrder) => formattedOrder.id_orden === order.id_orden);
 
-    //   if (!existingOrder) {
-    //     formattedOrders.push({
-    //       OrderIdentificador: order.OrdenIdentificador,
-    //       id_orden: order.id_orden,
-    //       fecha_creacion: order.fecha_creacion,
-    //       estado: order.estado,
-    //       detalles: [],
-    //       total_orden: 0, // Agregamos una propiedad para el total de la orden
-    //     });
-    //   }
+      if (!existingOrder) {
+        formattedOrders.push({
+          OrderIdentificador: order.OrdenIdentificador,
+          id_orden: order.id_orden,
+          fecha_creacion: order.fecha_creacion,
+          estado: order.estado,
+          detalles: [],
+          total_orden: 0, // Agregamos una propiedad para el total de la orden
+        });
+      }
 
-    //   const formattedDetail = {
-    //     id_detalle_orden: order.id_orden,
-    //     nombre_producto: order.nombre_producto,
-    //     cantidad: order.cantidad,
-    //     precio_unitario: order.precio_unitario_producto,
-    //     subtotal: order.cantidad * order.precio_unitario_producto, // Agregamos el subtotal del detalle
-    //   };
+      const formattedDetail = {
+        id_detalle_orden: order.id_orden,
+        nombre_producto: order.nombre_producto,
+        cantidad: order.cantidad,
+        precio_unitario: order.precio_unitario_producto,
+        subtotal: order.cantidad * order.precio_unitario_producto, // Agregamos el subtotal del detalle
+      };
 
-    //   const targetOrder = formattedOrders.find((formattedOrder) => formattedOrder.id_orden === order.id_orden);
-    //   targetOrder.detalles.push(formattedDetail);
-    //   targetOrder.total_orden += formattedDetail.subtotal; // Actualizamos el total de la orden
-    // }
+      const targetOrder = formattedOrders.find((formattedOrder) => formattedOrder.id_orden === order.id_orden);
+      targetOrder.detalles.push(formattedDetail);
+      targetOrder.total_orden += formattedDetail.subtotal; // Actualizamos el total de la orden
+    }
 
-    return res.status(200).send({ status: 'SUCCESS', orders: orders });
+    return res.status(200).send({ status: 'SUCCESS', orders: formattedOrders });
 
   } catch (error) {
     console.error(error);
@@ -238,56 +238,6 @@ const markOrderAsCancelled = async (connection, orderId) => {
 
 //ADMIN FUNCIONS 
 
-// const GetAllOrders = async (req, res) => {
-//   try {
-//     // Consulta SQL para obtener todas las órdenes y ordenarlas de la más nueva a la más antigua
-//     const query = `
-//       SELECT o.id_orden, o.fecha_creacion, o.estado, do.id_detalle, o.OrdenIdentificador, p.nombre_producto, do.cantidad, p.precio_unitario_producto
-//       FROM ordenes AS o
-//       INNER JOIN detalles_orden AS do ON o.id_orden = do.id_orden_fk
-//       INNER JOIN productos AS p ON do.id_producto = p.id_producto
-//       ORDER BY o.fecha_creacion DESC;
-//     `;
-
-//     const orders = await pool.query(query);
-//     console.log(orders);
-//     // Formatear los datos de las órdenes para una respuesta más presentable
-//     const formattedOrders = [];
-
-//     for (const order of orders) {
-//       const formattedDetail = {
-//         id_detalle_orden: order.id_orden,
-//         nombre_producto: order.nombre_producto,
-//         cantidad: order.cantidad,
-//         precio_unitario: order.precio_unitario_producto,
-//         subtotal: order.cantidad * order.precio_unitario_producto,
-//         Identificacion_Orden: order.OrdenIdentificador,
-//         Fecha_creacion: order.fecha_creacion
-//       };
-
-//       const existingOrder = formattedOrders.find((formattedOrder) => formattedOrder.id_orden === order.id_orden);
-
-//       if (!existingOrder) {
-//         formattedOrders.push({
-//           OrderIdentificador: order.OrdenIdentificador,
-//           id_orden: order.id_orden,
-//           fecha_creacion: order.fecha_creacion,
-//           estado: order.estado,
-//           detalles: [formattedDetail],
-//           total_orden: formattedDetail.subtotal,
-//         });
-//       } else {
-//         existingOrder.detalles.push(formattedDetail);
-//         existingOrder.total_orden += formattedDetail.subtotal;
-//       }
-//     }
-
-//     return res.status(200).send({ status: 'SUCCESS', orders: formattedOrders });
-//   } catch (error) {
-//     console.error(error);
-//     return res.status(500).send({ status: 'FAILED', message: 'Error interno del servidor.' });
-//   }
-// };
 const GetAllOrders = async (req, res) => {
   try {
     // Consulta SQL para obtener todas las órdenes con detalles de productos y precios unitarios y ordenarlas de la más nueva a la más antigua
@@ -338,11 +288,94 @@ const GetAllOrders = async (req, res) => {
 };
 
 
+const GetAllOrdersPaginado = async (req, res) => {
+  try {
+    let { page = 1, ordersPerPage = 15 } = req.query;
+
+    // Validar y convertir los parámetros a números enteros
+    page = parseInt(page, 10);
+    ordersPerPage = parseInt(ordersPerPage, 10);
+
+    // Establecer valores predeterminados si los parámetros no son válidos
+    if (isNaN(page) || page < 1) {
+      page = 1;
+    }
+    if (isNaN(ordersPerPage) || ordersPerPage < 1) {
+      ordersPerPage = 15;
+    }
+
+    const startIndex = (page - 1) * ordersPerPage;
+
+    const query = `
+      SELECT o.id_orden, o.fecha_creacion, o.estado, do.id_detalle, o.OrdenIdentificador, p.nombre_producto, do.cantidad, p.precio_unitario_producto
+      FROM ordenes AS o
+      INNER JOIN detalles_orden AS do ON o.id_orden = do.id_orden_fk
+      INNER JOIN productos AS p ON do.id_producto = p.id_producto
+      ORDER BY o.fecha_creacion DESC
+      LIMIT ${ordersPerPage} OFFSET ${startIndex};`;
+
+    const [orders] = await pool.query(query);
+    const formattedOrders = [];
+
+    for (const order of orders) {
+      const formattedDetail = {
+        id_detalle_orden: order.id_detalle_orden,
+        nombre_producto: order.nombre_producto,
+        cantidad: order.cantidad,
+        precio_unitario: order.precio_unitario_producto,
+        subtotal: order.cantidad * order.precio_unitario_producto,
+        Identificacion_Orden: order.OrdenIdentificador,
+        Fecha_creacion: new Date(order.fecha_creacion).toLocaleString(),
+      };
+
+      const existingOrder = formattedOrders.find((formattedOrder) => formattedOrder.id_orden === order.id_orden);
+
+      if (!existingOrder) {
+        formattedOrders.push({
+          OrderIdentificador: order.OrdenIdentificador,
+          id_orden: order.id_orden,
+          fecha_creacion: new Date(order.fecha_creacion).toLocaleString(),
+          estado: order.estado,
+          detalles: [formattedDetail],
+          total_orden: formattedDetail.subtotal,
+        });
+      } else {
+        existingOrder.detalles.push(formattedDetail);
+        existingOrder.total_orden += formattedDetail.subtotal;
+      }
+    }
+
+    const countQuery = "SELECT COUNT(*) as total FROM ordenes";
+    const [countResult] = await pool.query(countQuery);
+    const totalOrders = countResult[0].total;
+    const totalPages = Math.ceil(totalOrders / ordersPerPage);
+
+    return res.status(200).send({
+      status: 'SUCCESS',
+      formattedOrders,
+      pagination: {
+        totalOrders,
+        totalPages,
+        currentPage: page,
+        ordersPerPage,
+      },
+    });
+
+  } catch (error) {
+    console.error(error);
+    return res.status(500).send({ status: 'FAILED', message: 'Error interno del servidor.' });
+  }
+};
+
+
+
+
 
 export const methods = {
   CreateOrder,
   ViewOrders,
   ViewOrderByIdentificador,
   CancelOrder,
-  GetAllOrders
+  GetAllOrders,
+  GetAllOrdersPaginado
 };

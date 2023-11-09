@@ -25,12 +25,7 @@ const getProducts = async (req, res) => {
         const startIndex = (parsedPage - 1) * parsedProductsPerPage;
 
         // Construye la consulta base
-        let query = "SELECT * FROM productos";
-
-        // Si se proporciona una categoría, agrega la cláusula WHERE para filtrar por categoría
-        if (category) {
-            query += " WHERE Categorias_ID_fk = ?";
-        }
+        let query = "SELECT * FROM productos WHERE Estado_ID_fk = 1";
 
         // Realiza una consulta para obtener la cantidad total de productos (con o sin filtro de categoría)
         const countQuery = "SELECT COUNT(*) as total FROM productos";
@@ -96,11 +91,9 @@ const getDetaillProduct = async (req, res) => {
 
 const createProduct = async (req, res) => {
     try {
-        // datos del producto del cuerpo de la solicitud
-        const { nombre_producto, descripcion_producto, precio_unitario_producto, cantidad_stock, marca_producto, Proveedores_ID_fk, Categorias_ID_fk } = req.body;
+        const { nombre_producto, descripcion_producto, precio_unitario_producto, cantidad_stock, marca_producto, Proveedores_Nombre, Categorias_Nombre } = req.body;
 
-        // Validaciones de campos requeridos y tipos de datos
-        if (!nombre_producto || !descripcion_producto || !precio_unitario_producto || !cantidad_stock || !marca_producto || !Proveedores_ID_fk || !Categorias_ID_fk) {
+        if (!nombre_producto || !descripcion_producto || !precio_unitario_producto || !cantidad_stock || !marca_producto || !Proveedores_Nombre || !Categorias_Nombre) {
             return res.status(400).send({ status: "FAILED", message: "Todos los campos son requeridos." });
         }
 
@@ -108,19 +101,31 @@ const createProduct = async (req, res) => {
             return res.status(400).send({ status: "FAILED", message: "Los campos de precio y cantidad deben ser números." });
         }
 
-        //Consulta a la base de datos para obtener el estado
-        const [estado] = await pool.query(
-            "SELECT * FROM estado WHERE Nom_estado = ?", "activo");
+        // Obtener el ID del proveedor
+        const [proveedorResult] = await pool.query("SELECT ID_proveedor FROM proveedores WHERE nombre_empresa = ?", Proveedores_Nombre);
 
-        // Realiza la inserción en la base de datos
-        const insertQuery = "INSERT INTO productos (nombre_producto, descripcion_producto, precio_unitario_producto, cantidad_stock, marca_producto, Proveedores_ID_fk,Estado_ID_fk, Categorias_ID_fk) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-        const [result] = await pool.query(insertQuery, [nombre_producto, descripcion_producto, precio_unitario_producto, cantidad_stock, marca_producto, Proveedores_ID_fk, estado[0].ID_estado, Categorias_ID_fk]);
+        if (proveedorResult.length === 0) {
+            return res.status(400).send({ status: "FAILED", message: "El proveedor especificado no existe." });
+        }
+        const Proveedores_ID_fk = proveedorResult[0].ID_proveedor;
+
+        // Obtener el ID de la categoría
+        const [categoriaResult] = await pool.query("SELECT ID_categoria FROM categorias WHERE nombre_categoria = ?", Categorias_Nombre);
+
+        if (categoriaResult.length === 0) {
+            return res.status(400).send({ status: "FAILED", message: "La categoría especificada no existe." });
+        }
+        const Categorias_ID_fk = categoriaResult[0].ID_categoria;
+
+        // Consulta a la base de datos para obtener el estado
+        const [estado] = await pool.query("SELECT * FROM estado WHERE Nom_estado = ?", "activo");
+
+        const insertQuery = "INSERT INTO productos (nombre_producto, descripcion_producto, precio_unitario_producto, cantidad_stock, marca_producto, Proveedores_ID_fk, Estado_ID_fk, Categorias_ID_fk, Proveedor, Categoria) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        const [result] = await pool.query(insertQuery, [nombre_producto, descripcion_producto, precio_unitario_producto, cantidad_stock, marca_producto, Proveedores_ID_fk, estado[0].ID_estado, Categorias_ID_fk, Proveedores_Nombre, Categorias_Nombre ]);
 
         if (result.affectedRows === 1) {
-            // Si la inserción fue exitosa, responde con un código 201 (Creado)
             return res.status(201).send({ status: "SUCCESS", message: "Producto creado exitosamente." });
         } else {
-            // Si la inserción no fue exitosa, responde con un código 500 (Internal Server Error)
             return res.status(500).send({ status: "FAILED", message: "No se pudo crear el producto." });
         }
     } catch (error) {
@@ -128,6 +133,7 @@ const createProduct = async (req, res) => {
         return res.status(500).send({ status: "FAILED", message: "Algo salió mal al crear el producto." });
     }
 };
+
 
 const updateProduct = async (req, res) => {
     try {
@@ -227,6 +233,43 @@ const getCategory = async (req, res) => {
     } catch (error) {
         console.error(error);
         // Si ocurre un error, responde con un código de estado 500 (Error interno del servidor)
+        return res.status(500).send({ status: "FAILED", message: "Algo salió mal al ver las categorías" });
+    }
+};
+
+
+const getCategoryPaginacion = async (req, res) => {
+    try {
+        const { page = 1, productsPerPage = 15 } = req.query;
+
+        const parsedPage = parseInt(page, 10);
+        const parsedProductsPerPage = parseInt(productsPerPage, 10);
+
+        const startIndex = (parsedPage - 1) * parsedProductsPerPage;
+
+        let query = "SELECT * FROM categorias";
+
+        query += ` LIMIT ${parsedProductsPerPage} OFFSET ${startIndex}`;
+
+        const [rows] = await pool.query(query);
+
+        const countQuery = "SELECT COUNT(*) as total FROM categorias WHERE Estado_ID_fk = 1";
+        const [countResult] = await pool.query(countQuery);
+        const totalCategories = countResult[0].total;
+
+        const totalPages = Math.ceil(totalCategories / parsedProductsPerPage);
+
+        res.status(200).send({
+            categories: rows,
+            pagination: {
+                totalCategories,
+                totalPages,
+                currentPage: parsedPage,
+                productsPerPage: parsedProductsPerPage
+            } 
+        });
+
+    } catch (error) {
         return res.status(500).send({ status: "FAILED", message: "Algo salió mal al ver las categorías" });
     }
 };
@@ -339,6 +382,7 @@ const CategoryDeleted = async (req, res) => {
         return res.status(500).send({ status: "FAILED", message: "No se pudo eliminar la categoria" });
     }
 };
+
 
 const searchProducts = async (req, res) => {
     try {
@@ -502,5 +546,6 @@ export const methods = {
     RestoreStock,
     searchProductsByCategories,
     countProductsByCategory,
-    searchProductsbyCategory
+    searchProductsbyCategory,
+    getCategoryPaginacion
 };

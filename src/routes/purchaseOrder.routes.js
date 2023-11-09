@@ -12,6 +12,7 @@ const router = Router();
 router.post('/create-order', authentification, purchaseController.CreateOrder)
 router.get('/view-orders', authentification, purchaseController.ViewOrders)
 router.get('/view-all-orders', authentification, purchaseController.GetAllOrders)
+router.get('/view-all-ordersPaginado', authentification, purchaseController.GetAllOrdersPaginado)
 router.get('/view-order/:ordenIdentificador', authentification, purchaseController.ViewOrderByIdentificador)
 router.patch('/cancel-orders', authentification, purchaseController.CancelOrder)
 
