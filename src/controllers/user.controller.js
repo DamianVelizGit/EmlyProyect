@@ -35,7 +35,6 @@ const createUser = async (req, res) => {
         const sanitizedTelefonoUsuario = sanitize(telefono_usuario);
         const sanitizedNitUsuario = sanitize(nit_usuario);
         const sanitizedDirecRefUsuario = sanitize(DireccionRef);
-        console.log(sanitizedDirecRefUsuario);
 
         // Generar un hash seguro para la contraseña del usuario
         const hashedPassword = await encrypt(contraseña_usuario);
@@ -166,7 +165,6 @@ const viewProfile = async (req, res) => {
     try {
 
         const { user } = req;
-        console.log(user);
 
         res.status(200).send(user);
 

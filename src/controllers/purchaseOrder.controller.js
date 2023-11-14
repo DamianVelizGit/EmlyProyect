@@ -203,12 +203,10 @@ const CancelOrder = async (req, res) => {
     }
 
     const [orderProducts] = await connection.query('SELECT id_producto, cantidad FROM detalles_orden WHERE id_orden_fk = ?', [id_orden]);
-    console.log(orderProducts);
     for (const product of orderProducts) {
       // console.log("productId: " + product.id_producto, "cantidad:" +  product.cantidad);
       await restoreStock(connection, product.id_producto, product.cantidad);
     }
-    console.log(id_orden);
     await markOrderAsCancelled(connection, id_ordenIdentificador);
 
     await connection.commit();
@@ -225,7 +223,6 @@ const CancelOrder = async (req, res) => {
 };
 
 const restoreStock = async (connection, productId, quantity) => {
-  console.log("productId: " + productId, "cantidad:" + quantity);
   await connection.query('UPDATE productos SET cantidad_stock = cantidad_stock + ? WHERE ID_producto = ?', [quantity, productId]);
 };
 

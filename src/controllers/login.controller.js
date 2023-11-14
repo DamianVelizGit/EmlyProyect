@@ -106,7 +106,6 @@ const forgotPass = async (req, res) => {
         const { email } = req.body;
 
         // Verificar si el correo existe en la base de datos antes de enviar el correo de recuperación
-        console.log(email);
         const user = await getUserByEmail(email);
         if (!user) {
             return res.status(400).send({ success: false, message: "El correo electrónico no está registrado o no esta enviando un correo" });

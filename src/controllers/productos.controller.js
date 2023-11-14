@@ -168,8 +168,6 @@ const updateProduct = async (req, res) => {
         const productId = req.params.id; // Obtén el ID del producto de los parámetros de la URL
         const updatedFields = req.body; // Obtén los campos actualizados del cuerpo de la solicitud
 
-        console.log(req.params);
-        console.log(req.body);
         // Verifica que el ID del producto sea un número entero válido
         if (!Number.isInteger(+productId)) {
             return res.status(400).send({ status: "ERROR", message: "ID del producto no válido." });
@@ -196,7 +194,6 @@ const deleteProduct = async (req, res) => {
     try {
         // Obtén el ID del producto a eliminar desde los parámetros de la solicitud
         const { id } = req.params;
-        console.log(req.params);
         // Verifica si el ID  es un número entero válido
         if (!Number.isInteger(+id)) {
             return res.status(400).send({ status: "ERROR", message: "ID del producto no válido." });

@@ -150,7 +150,6 @@ const updateCartItem = async (req, res) => {
     try {
         // Validar que los parámetros sean números y que id_usuario esté presente
         const { id_producto, cantidad } = req.body;
-        console.log(req.body);
         if (isNaN(id_producto) || isNaN(cantidad) || !req.user || !req.user[0].ID_usuario) {
             return res.status(400).send({ status: 'BAD_REQUEST', message: 'Parámetros de solicitud inválidos.' });
         }
@@ -231,7 +230,6 @@ const DeleteCartItem = async (req, res) => {
 
             // Obtener el id_producto_carrito del producto en el carrito
             const id_producto_carrito = cartInfo[0].id_producto_carrito;
-            console.log(id_producto_carrito);
             // Eliminar el producto del carrito
             await connection.query('DELETE FROM productos_en_carrito WHERE id_producto_carrito = ?', [id_producto_carrito]);
 

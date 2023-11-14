@@ -11,7 +11,6 @@ const encrypt = async (textPlain) => {
 const compare = async (passPlain, hashPass) => {
 
     const result = await bcrypt.compare(passPlain, hashPass)
-    console.log(result);
     return result
 }
 

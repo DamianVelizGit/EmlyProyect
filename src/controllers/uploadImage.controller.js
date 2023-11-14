@@ -60,7 +60,6 @@ const addProductImg = async (req, res) => {
         }
 
         const { id } = req.params;
-        console.log("La id del producto es::", id);
 
         const { width, height } = await sharp(req.file.buffer).metadata();
         const maxDimension = 250;

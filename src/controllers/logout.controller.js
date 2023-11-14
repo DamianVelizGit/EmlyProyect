@@ -7,7 +7,6 @@ const logout = async (req, res) => {
         if (!authorizationHeader) {
             return res.status(401).json({ message: 'No se proporcionó un token de autorización.' });
         }
-        console.log(authorizationHeader);
         const token = authorizationHeader.split(' ')[1];
 
 
