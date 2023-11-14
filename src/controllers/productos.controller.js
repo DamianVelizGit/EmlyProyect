@@ -24,8 +24,8 @@ const getProducts = async (req, res) => {
 
         const startIndex = (parsedPage - 1) * parsedProductsPerPage;
 
-        // Construye la consulta base
-        let query = "SELECT * FROM productos WHERE Estado_ID_fk = 1";
+        // Construye la consulta base con la columna Img_Producto
+        let query = "SELECT ID_producto, nombre_producto, descripcion_producto, precio_unitario_producto,  Img_Producto, Categoria, Proveedor, cantidad_stock, marca_producto FROM productos WHERE Estado_ID_fk = 1";
 
         // Realiza una consulta para obtener la cantidad total de productos (con o sin filtro de categoría)
         const countQuery = "SELECT COUNT(*) as total FROM productos";
@@ -49,9 +49,17 @@ const getProducts = async (req, res) => {
 
         const [rows] = await pool.query(query, params);
 
+        // Agrega la URL de la imagen para cada producto
+        const productsWithImageURLs = rows.map(product => {
+            return {
+                ...product,
+                image_url: `http://localhost:3001/v1/imagen/uploadProductImg/view/${product.ID_producto}`,
+            };
+        });
+
         // Responde con los productos y metadatos de paginación
         res.status(200).send({
-            products: rows,
+            products: productsWithImageURLs,
             pagination: {
                 totalProducts,
                 totalPages,
@@ -64,6 +72,26 @@ const getProducts = async (req, res) => {
         return res.status(500).send({ status: "FAILED", message: "Algo salió mal al obtener los Productos" });
     }
 };
+
+
+const getAllProducts = async (req, res) => {
+    try {
+        // Construye la consulta
+        let query = "SELECT ID_producto, nombre_producto, cantidad_stock FROM productos WHERE Estado_ID_fk = 1";
+
+        const [rows] = await pool.query(query);
+
+
+        // Responde con los productos
+        res.status(200).send({
+            product: rows,
+        });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).send({ status: "FAILED", message: "Algo salió mal al obtener el Producto" });
+    }
+};
+
 
 const getDetaillProduct = async (req, res) => {
     try {
@@ -534,6 +562,7 @@ const countProductsByCategory = async (req, res) => {
 
 export const methods = {
     getProducts,
+    getAllProducts,
     getDetaillProduct,
     createProduct,
     updateProduct,

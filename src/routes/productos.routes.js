@@ -26,6 +26,8 @@ router.delete('/delete/category/:id', authentification, rolValidator("SuperAdmin
 //Ruta get para obtener todos los productos
 router.get('/list/products', productController.getProducts)
 
+router.get('/list/All-products', productController.getAllProducts)
+
 router.post('/detaill/product', productController.getDetaillProduct)
 
 router.get('/search/category', productController.searchProductsbyCategory)
