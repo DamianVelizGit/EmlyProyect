@@ -53,7 +53,6 @@ const createProvider = async (req, res) => {
     }
 };
 
-
 const viewProviders = async (req, res) => {
     try {
 
@@ -80,7 +79,6 @@ const viewProviders = async (req, res) => {
         return res.status(500).send({ status: "FAILED", message: "Algo salió mal al obtener los proveedores." });
     }
 };
-
 
 const getProviderPaginacion = async (req, res) => {
     try {
@@ -117,7 +115,6 @@ const getProviderPaginacion = async (req, res) => {
         return res.status(500).send({ status: "FAILED", message: "Algo salió mal al ver los proveedores" });
     }
 };
-
 
 const DeleteProvider = async (req, res) => {
     try {

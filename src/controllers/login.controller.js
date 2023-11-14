@@ -5,8 +5,10 @@ import { EMAIL } from './../config.js';
 import transporter from "../utils/mailer.js";
 
 
+//***********************LOGIN*******************************/
 const loginUser = async (req, res) => {
     try {
+        //Obtenemos los datos desde el body de la solicitud
         const { correo_electronico, contraseña_usuario } = req.body;
 
         //  Verificar si el correo existe en la base de datos antes de continuar.
@@ -14,12 +16,12 @@ const loginUser = async (req, res) => {
             'SELECT * FROM usuarios WHERE correo_electronico = ? LIMIT 1',
             [correo_electronico]
         );
-
+        //Verofoca que si la consulta no encontro nada las credenciales son invalidas
         if (user.length === 0) {
             return res.status(401).send({ status: "ERROR", message: 'Credenciales incorrectas' });
         }
 
-        //  Verificar las credenciales con una función segura de comparación de contraseñas.
+        //  Verificar las credenciales con una función del middleware de comparación de contraseñas.
         const isPasswordValid = await compare(contraseña_usuario, user[0].contraseña_usuario);
 
         if (!isPasswordValid) {
@@ -98,8 +100,7 @@ async function getUserByEmail(email) {
 }
 
 
-
-
+//***********************RECUPERACION DE CONTRASEÑA*******************************/
 const forgotPass = async (req, res) => {
     try {
         const { email } = req.body;

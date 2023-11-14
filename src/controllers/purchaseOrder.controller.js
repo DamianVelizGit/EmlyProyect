@@ -66,7 +66,6 @@ const CreateOrder = async (req, res) => {
   }
 };
 
-
 const ViewOrders = async (req, res) => {
   try {
     const id_usuario = req.user[0].ID_usuario; // ID de usuario autenticado desde el token
@@ -180,7 +179,6 @@ const ViewOrderByIdentificador = async (req, res) => {
   }
 };
 
-// Ruta para cancelar una orden y restaurar el stock
 const CancelOrder = async (req, res) => {
   const { id_orden, id_ordenIdentificador } = req.body;
 
@@ -286,7 +284,6 @@ const GetAllOrders = async (req, res) => {
     return res.status(500).send({ status: 'FAILED', message: 'Error interno del servidor.' });
   }
 };
-
 
 const GetAllOrdersPaginado = async (req, res) => {
   try {

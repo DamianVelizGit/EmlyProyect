@@ -1,7 +1,5 @@
 import { pool } from "../database/database.js";
-const multer = require('multer');
 const sharp = require('sharp');
-
 
 
 const addUserAvatar = async (req, res) => {
@@ -104,7 +102,6 @@ const addProductImg = async (req, res) => {
         res.status(500).send({ msg: error });
     }
 };
-
 
 const ViewProductImg = async (req, res) => {
     try {

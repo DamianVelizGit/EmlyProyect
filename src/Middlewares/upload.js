@@ -1,4 +1,4 @@
-const multer = require('multer')                //Cargamos el módulo multer
+const multer = require('multer')     //Cargamos el módulo multer
 
 //Definimos una instancia para multer
 const upload = multer({

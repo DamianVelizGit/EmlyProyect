@@ -2,7 +2,6 @@ import express from "express"
 import morgan from "morgan";
 import { SECRET } from './config'
 import { sessionStore } from './database/database.js'
-const multer = require('multer')
 const session = require('express-session');
 
 
@@ -41,32 +40,6 @@ app.use(session({
   saveUninitialized: false
 }))
 
-
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'uploads/'); // Directorio donde se guardarán las imágenes
-  },
-  filename: (req, file, cb) => {
-    // Renombra el archivo para evitar colisiones de nombres
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, file.fieldname + '-' + uniqueSuffix + '.' + file.originalname.split('.').pop());
-  },
-});
-
-const upload = multer({
-  storage: storage,
-  limits: {
-    fileSize: 1024 * 1024, // Tamaño máximo de 1MB
-  },
-  fileFilter: (req, file, cb) => {
-    if (file.mimetype.startsWith('image/')) {
-      cb(null, true);
-    } else {
-      cb(new Error('Solo se permiten imágenes.'));
-    }
-  },
-});
 
 //Middlewares
 //Usamos morgan para ver las salidas http en consola

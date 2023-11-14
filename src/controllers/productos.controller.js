@@ -492,6 +492,27 @@ const searchProductsByCategories = async (req, res) => {
     }
 };
 
+const countProductsByCategory = async (req, res) => {
+    try {
+        // Consulta SQL para contar productos por categoría y obtener los nombres de categorías
+        const query = `
+      SELECT c.nombre_categoria AS nombreCategoria, COUNT(p.ID_producto) AS cantidadProductos
+      FROM productos p
+      INNER JOIN categorias c ON p.Categorias_ID_fk = c.ID_categoria
+      GROUP BY p.Categorias_ID_fk, c.nombre_categoria
+    `;
+
+        // Ejecuta la consulta SQL
+        const [results] = await pool.query(query);
+
+        // Responde con los resultados
+        return res.status(200).json({ status: 'SUCCESS', data: results });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ status: 'FAILED', message: 'Error al contar productos por categoría.' });
+    }
+};
+
 const RestoreStock = async (req, res) => {
     try {
         const { id_producto, cantidad, id_proveedor } = req.body;
@@ -537,26 +558,6 @@ const RestoreStock = async (req, res) => {
     }
 };
 
-const countProductsByCategory = async (req, res) => {
-    try {
-        // Consulta SQL para contar productos por categoría y obtener los nombres de categorías
-        const query = `
-      SELECT c.nombre_categoria AS nombreCategoria, COUNT(p.ID_producto) AS cantidadProductos
-      FROM productos p
-      INNER JOIN categorias c ON p.Categorias_ID_fk = c.ID_categoria
-      GROUP BY p.Categorias_ID_fk, c.nombre_categoria
-    `;
-
-        // Ejecuta la consulta SQL
-        const [results] = await pool.query(query);
-
-        // Responde con los resultados
-        return res.status(200).json({ status: 'SUCCESS', data: results });
-    } catch (error) {
-        console.error(error);
-        return res.status(500).json({ status: 'FAILED', message: 'Error al contar productos por categoría.' });
-    }
-};
 
 
 

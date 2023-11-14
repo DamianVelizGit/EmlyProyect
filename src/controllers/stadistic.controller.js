@@ -1,7 +1,4 @@
 import { pool } from "../database/database.js";
-import { encrypt } from '../utils/handlehash.js';
-import jwt from "../utils/jwtToken.js";
-
 
 
 const TopSales = async (req, res) => {

@@ -12,6 +12,7 @@ function sanitize(input) {
 
 const createUser = async (req, res) => {
     try {
+        //Obtenemos los datos directamente del body de la solicitud
         const {
             nombre_usuario,
             apellido_usuario,
@@ -95,7 +96,7 @@ const createUser = async (req, res) => {
             "INSERT INTO token (nameToken, Usuarios_ID_fk) values(?,?)",
             [token, userId]
         );
-
+        //Devolvemos los datos registrados
         res.status(201).send({
             id: userId,
             nombre_usuario: sanitizedNombreUsuario,
@@ -149,8 +150,6 @@ const updateUser = async (req, res) => {
         return res.status(500).send({ status: "FAILED", message: "Algo salió mal al actualizar el usuario." });
     }
 };
-
-
 
 const upload = async (req, res) => {
     try {

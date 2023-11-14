@@ -1,6 +1,4 @@
 import { pool } from "../database/database.js";
-import { encrypt } from '../utils/handlehash.js';
-import jwt from "../utils/jwtToken.js";
 
 
 const addtoCart = async (req, res) => {
@@ -81,34 +79,6 @@ const addtoCart = async (req, res) => {
     }
 };
 
-// const ViewToCart = async (req, res) => {
-//     try {
-//         const id_usuario = req.user[0].ID_usuario; // Obtén el ID de usuario autenticado desde el token
-
-//         // Consulta para obtener los productos en el carrito del usuario
-//         const query = `
-//             SELECT pec.id_producto_carrito,p.id_producto, p.nombre_producto, pec.cantidad, p.precio_unitario_producto
-//             FROM productos_en_carrito AS pec
-//             INNER JOIN productos AS p ON pec.id_producto = p.id_producto
-//             WHERE pec.id_carrito IN (
-//                 SELECT id_carrito
-//                 FROM carritos
-//                 WHERE id_usuario_fk = ?
-//                 AND estado_carrito_fk = 1
-//             )
-//         `;
-
-//         // Ejecuta la consulta SQL
-//         const [rows] = await pool.query(query, [id_usuario]);
-
-//         // Responde con la lista de productos en el carrito
-//         return res.status(200).json({ status: 'SUCCESS', data: rows });
-//     } catch (error) {
-//         console.error(error);
-//         return res.status(500).json({ status: 'FAILED', message: 'Error al obtener el contenido del carrito.' });
-//     }
-// };
-
 const ViewToCart = async (req, res) => {
     try {
         const id_usuario = req.user[0].ID_usuario; // Obtén el ID de usuario autenticado desde el token
@@ -155,7 +125,6 @@ const ViewToCart = async (req, res) => {
     }
 };
 
-
 const countProductsInCart = async (req, res) => {
     try {
         const id_usuario = req.user[0].ID_usuario; // Obtén el ID de usuario autenticado desde el token
@@ -176,8 +145,6 @@ const countProductsInCart = async (req, res) => {
         return res.status(500).json({ status: 'FAILED', message: 'Error al contar los productos en el carrito activo.' });
     }
 };
-
-
 
 const updateCartItem = async (req, res) => {
     try {
@@ -238,7 +205,6 @@ const updateCartItem = async (req, res) => {
         return res.status(500).send({ status: 'FAILED', message: 'Error interno del servidor.' });
     }
 };
-
 
 const DeleteCartItem = async (req, res) => {
     try {
